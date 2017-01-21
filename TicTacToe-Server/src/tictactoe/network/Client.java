@@ -9,15 +9,13 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Client implements Runnable{
+public class Client {
     
     private Socket socket;
     private Thread th;
     
     public Client(Socket socket){
         this.socket = socket;
-        th = new Thread(this);
-        th.start();
     }
     
     public boolean send(String msg)
@@ -34,6 +32,7 @@ public class Client implements Runnable{
         }
         return result;
     }
+    
     
     public String recieve(){
         
@@ -52,10 +51,12 @@ public class Client implements Runnable{
         
     }
     
-    public void run(){
-        
+    public void close(){
+        try {
+            this.socket.close();
+        } catch (IOException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
-    
-    
     
 }

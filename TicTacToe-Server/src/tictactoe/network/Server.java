@@ -48,6 +48,9 @@ public class Server implements Runnable{
                 try {
                     Socket socket = serverSocket.accept();
                     
+                    Client client = new Client(socket);
+                    Session session = new Session(client);
+                    session.start();
                 } catch (IOException ex) {
                     Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
                     this.isConnected = false;
