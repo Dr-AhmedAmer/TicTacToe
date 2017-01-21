@@ -11,7 +11,6 @@
       com.mysql.jdbc.Driver
    </property>
 
-   <!-- Assume students is the database name -->
    <property name="hibernate.connection.url">
       jdbc:mysql://localhost/ticgame
    </property>

@@ -10,6 +10,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  *
@@ -30,6 +31,7 @@ public class Player {
     @Column(name = "email")
     private String email;
     
+    @JsonIgnore
     @Column(name = "password")
     private String password;
     

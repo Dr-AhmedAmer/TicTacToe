@@ -6,6 +6,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import tictactoe.helpers.AuthHelper;
+import tictactoe.helpers.ResultObject;
+import tictactoe.models.Player;
 import tictactoe.network.messages.AuthMessage;
 import tictactoe.network.messages.MessageTypes;
 import tictactoe.network.messages.RegisterMessage;
@@ -62,18 +64,20 @@ public class Session implements Runnable{
                             case MessageTypes.MSG_TYPE_AUTH:
                               
                                 AuthMessage authMessage = this.objectMapper.readValue(msg, AuthMessage.class);
+                                
+                                ResultObject<Player> authResult = AuthHelper.logIn(authMessage);
+                                
+                                client.send(this.objectMapper.writeValueAsString(authResult));
+                                
                                 break;
                                 
                             case MessageTypes.MSG_TYPE_REG:
                                 
                                 RegisterMessage registerMessage = this.objectMapper.readValue(msg, RegisterMessage.class);
                                 
-                                int result = AuthHelper.register(registerMessage);
+                                ResultObject<Player> regResult = AuthHelper.register(registerMessage);
                                 
-                                if(result == 0)
-                                    client.send("Success");
-                                else
-                                    client.send("Failure");
+                                client.send(this.objectMapper.writeValueAsString(regResult));
                                 
                                 break;
                         }

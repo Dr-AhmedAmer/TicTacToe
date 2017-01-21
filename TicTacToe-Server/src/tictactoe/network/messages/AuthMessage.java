@@ -1,7 +1,7 @@
 
 package tictactoe.network.messages;
 
-public class AuthMessage {
+public class AuthMessage extends Message {
     
     private String userName;
     private String password;

@@ -2,7 +2,7 @@
 package tictactoe.network.messages;
 
 
-public class RegisterMessage {
+public class RegisterMessage extends Message {
     
     private String email;
     private String displayName;
