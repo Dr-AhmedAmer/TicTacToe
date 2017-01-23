@@ -9,10 +9,13 @@ import java.util.logging.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import tictactoe.helpers.AuthHelper;
 import tictactoe.helpers.DBManager;
+import tictactoe.helpers.PlayerHelper;
+import tictactoe.helpers.ResultList;
 import tictactoe.helpers.ResultObject;
 import tictactoe.models.Player;
 import tictactoe.network.messages.AuthMessage;
 import tictactoe.network.messages.MessageTypes;
+import tictactoe.network.messages.PlayersListMessage;
 import tictactoe.network.messages.RegisterMessage;
 
 public class Session implements Runnable{
@@ -87,7 +90,12 @@ public class Session implements Runnable{
             
     }
     
-    public void send(String msg){
+    public void send(String type,String msg){
+        
+        type ="type=" + type + "\n";
+        this.sendQueue.add(type);
+        
+        msg+="\n";
         this.sendQueue.add(msg);
     }
     
@@ -111,49 +119,70 @@ public class Session implements Runnable{
                 
                 try {
 
-                    switch(type){
+                    if(this.player == null){
+                        
+                        switch(type){
 
-                        case MessageTypes.MSG_TYPE_AUTH:
+                            case MessageTypes.MSG_TYPE_AUTH:
 
-                            AuthMessage authMessage = this.objectMapper.readValue(msg, AuthMessage.class);
+                                AuthMessage authMessage = this.objectMapper.readValue(msg, AuthMessage.class);
 
-                            ResultObject<Player> authResult = AuthHelper.logIn(authMessage);
+                                ResultObject<Player> authResult = AuthHelper.logIn(authMessage);
+
+                                if(authResult.getErrors().isEmpty()){
+
+                                    this.player = authResult.getResult();
+                                    this.sessionManager.addSession(this.player.getId(), this);
+
+                                    this.player.setStatus(Player.STATUS_IDLE);
+                                    this.dbManager.update(this.player);
+
+
+                                }
+
+                                this.send(MessageTypes.MSG_TYPE_AUTH,this.objectMapper.writeValueAsString(authResult));
+
+                                break;
+
+                            case MessageTypes.MSG_TYPE_REG:
+
+                                RegisterMessage registerMessage = this.objectMapper.readValue(msg, RegisterMessage.class);
+
+                                ResultObject<Player> regResult = AuthHelper.register(registerMessage);
+
+                                if(regResult.getErrors().isEmpty()){
+
+                                    this.player = regResult.getResult();
+                                    this.sessionManager.addSession(this.player.getId(), this);
+
+                                    this.player.setStatus(Player.STATUS_IDLE);
+                                    this.dbManager.update(this.player);
+
+                                }
+
+                                this.send(MessageTypes.MSG_TYPE_REG,this.objectMapper.writeValueAsString(regResult));
+
+                                break;
+
+                        }
+                        
+                    }else{
+                        
+                        switch(type){
                             
-                            if(authResult.getErrors().isEmpty()){
-                                
-                                this.player = authResult.getResult();
-                                this.sessionManager.addSession(this.player.getId(), this);
-                                
-                                this.player.setStatus(Player.STATUS_IDLE);
-                                this.dbManager.update(this.player);
-                                
-                                
-                            }
+                            case MessageTypes.MSG_TYPE_LIST:
 
-                            this.send(this.objectMapper.writeValueAsString(authResult));
-
-                            break;
-
-                        case MessageTypes.MSG_TYPE_REG:
-
-                            RegisterMessage registerMessage = this.objectMapper.readValue(msg, RegisterMessage.class);
-
-                            ResultObject<Player> regResult = AuthHelper.register(registerMessage);
-
-                            if(regResult.getErrors().isEmpty()){
+                                ResultList<Player> resultList = PlayerHelper.getIdlePlayersExceptMe(this.player.getId());
                                 
-                                this.player = regResult.getResult();
-                                this.sessionManager.addSession(this.player.getId(), this);
+                                PlayersListMessage playerListMessage = new PlayersListMessage();
+                                playerListMessage.setPlayerList(resultList.getResults());
                                 
-                                this.player.setStatus(Player.STATUS_IDLE);
-                                this.dbManager.update(this.player);
+                                this.send(MessageTypes.MSG_TYPE_LIST,this.objectMapper.writeValueAsString(playerListMessage));
                                 
-                            }
-                            
-                            this.send(this.objectMapper.writeValueAsString(regResult));
-
-                            break;
+                                break;
+                        }
                     }
+                    
 
                 } catch (IOException ex) {
 

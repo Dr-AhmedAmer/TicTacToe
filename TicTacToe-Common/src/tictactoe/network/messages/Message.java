@@ -6,7 +6,7 @@ import java.util.List;
 
 public class Message {
     
-    List<Error> errors = new ArrayList<>(); 
+    private List<Error> errors = new ArrayList<>(); 
 
     public List<Error> getErrors() {
         return errors;
