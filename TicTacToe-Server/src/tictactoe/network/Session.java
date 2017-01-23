@@ -2,10 +2,13 @@
 package tictactoe.network;
 
 import java.io.IOException;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import tictactoe.helpers.AuthHelper;
+import tictactoe.helpers.DBManager;
 import tictactoe.helpers.ResultObject;
 import tictactoe.models.Player;
 import tictactoe.network.messages.AuthMessage;
@@ -14,26 +17,78 @@ import tictactoe.network.messages.RegisterMessage;
 
 public class Session implements Runnable{
     
+    private BlockingQueue<String> sendQueue = new LinkedBlockingQueue<String>();
+    
     private Client client;
     private boolean isStarted;
     private ObjectMapper objectMapper;
+    private Thread sendThread;
+    private SessionManager sessionManager;
+    private DBManager dbManager;
+    private Player player;
+    
+    private Runnable sendRunnable = new Runnable() {
+        @Override
+        public void run() {
+            
+            while(isStarted){
+                
+                try {
+                    
+                    String msg = Session.this.sendQueue.take();
+                    boolean succcess = Session.this.client.send(msg);
+                    
+                    if(!succcess){
+                        Session.this.stop();
+                    }
+                    
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Session.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                
+                
+            }
+            
+        }
+    };
     
     public Session(Client client){
         this.client = client;
         this.objectMapper = new ObjectMapper();
+        this.sessionManager = SessionManager.getInstance();
+        this.dbManager = DBManager.getInstance();
     }
     
     public void start(){
         if(!isStarted){
+            
+            isStarted = true;
+            
             Thread th = new Thread(this);
             th.start();
-            isStarted = true;
+            
+            this.sendThread = new Thread(this.sendRunnable);
+            this.sendThread.start();
+            
         }
     }
     
     public void stop(){
         isStarted = false;
         this.client.close();
+        this.sendThread.interrupt();
+        
+        if(this.player != null){
+            this.sessionManager.removeSession(this.player.getId());
+            
+            this.player.setStatus(Player.STATUS_OFFLINE);
+            this.dbManager.update(this.player);
+        }
+            
+    }
+    
+    public void send(String msg){
+        this.sendQueue.add(msg);
     }
     
     public void run(){
@@ -46,44 +101,64 @@ public class Session implements Runnable{
                 
             if(type != null && msg != null){
 
-            int index = type.indexOf("=");
+                int index = type.indexOf("=");
 
-            if(index >= 0){
+                if(index >= 0){
 
-                type = type.substring(index +1);
+                    type = type.substring(index +1);
 
-            }
-
-
-            try {
-
-                switch(type){
-
-                    case MessageTypes.MSG_TYPE_AUTH:
-
-                        AuthMessage authMessage = this.objectMapper.readValue(msg, AuthMessage.class);
-
-                        ResultObject<Player> authResult = AuthHelper.logIn(authMessage);
-
-                        client.send(this.objectMapper.writeValueAsString(authResult));
-
-                        break;
-
-                    case MessageTypes.MSG_TYPE_REG:
-
-                        RegisterMessage registerMessage = this.objectMapper.readValue(msg, RegisterMessage.class);
-
-                        ResultObject<Player> regResult = AuthHelper.register(registerMessage);
-
-                        client.send(this.objectMapper.writeValueAsString(regResult));
-
-                        break;
                 }
+                
+                try {
 
-            } catch (IOException ex) {
+                    switch(type){
 
-                Logger.getLogger(Session.class.getName()).log(Level.SEVERE, null, ex);
-            }
+                        case MessageTypes.MSG_TYPE_AUTH:
+
+                            AuthMessage authMessage = this.objectMapper.readValue(msg, AuthMessage.class);
+
+                            ResultObject<Player> authResult = AuthHelper.logIn(authMessage);
+                            
+                            if(authResult.getErrors().isEmpty()){
+                                
+                                this.player = authResult.getResult();
+                                this.sessionManager.addSession(this.player.getId(), this);
+                                
+                                this.player.setStatus(Player.STATUS_IDLE);
+                                this.dbManager.update(this.player);
+                                
+                                
+                            }
+
+                            this.send(this.objectMapper.writeValueAsString(authResult));
+
+                            break;
+
+                        case MessageTypes.MSG_TYPE_REG:
+
+                            RegisterMessage registerMessage = this.objectMapper.readValue(msg, RegisterMessage.class);
+
+                            ResultObject<Player> regResult = AuthHelper.register(registerMessage);
+
+                            if(regResult.getErrors().isEmpty()){
+                                
+                                this.player = regResult.getResult();
+                                this.sessionManager.addSession(this.player.getId(), this);
+                                
+                                this.player.setStatus(Player.STATUS_IDLE);
+                                this.dbManager.update(this.player);
+                                
+                            }
+                            
+                            this.send(this.objectMapper.writeValueAsString(regResult));
+
+                            break;
+                    }
+
+                } catch (IOException ex) {
+
+                    Logger.getLogger(Session.class.getName()).log(Level.SEVERE, null, ex);
+                }
                    
             }else{
                 

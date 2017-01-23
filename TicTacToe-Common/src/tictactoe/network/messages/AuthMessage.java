@@ -9,10 +9,19 @@ public class AuthMessage extends Message {
     public AuthMessage(){}
 
     public String getUserName() {
+         String userName = this.userName;
+        if (userName != null){
+            userName = userName.toLowerCase();
+        }
         return userName;
     }
 
     public void setUserName(String userName) {
+        
+        if (userName != null){
+            userName = userName.toLowerCase();
+        }
+        
         this.userName = userName;
     }
 

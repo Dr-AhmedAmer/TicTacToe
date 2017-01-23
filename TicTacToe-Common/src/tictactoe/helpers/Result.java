@@ -6,8 +6,9 @@ import java.util.List;
 
 public class Result {
     
-    private List<Error> errors;
+    private List<Error> errors = new ArrayList<>();
 
+    
     public List<Error> getErrors() {
         return errors;
     }
@@ -17,10 +18,7 @@ public class Result {
     }
     
     public void addError(Error error){
-        
-        if(this.errors == null)
-            this.errors = new ArrayList<Error>();
-        
+       
         this.errors.add(error);
         
     }

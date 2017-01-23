@@ -11,6 +11,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import org.hibernate.Session;
 
 /**
  *
@@ -20,6 +21,10 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 @Entity
 @Table(name = "players")
 public class Player {
+    
+    public final static String STATUS_OFFLINE = "offln";
+    public final static String STATUS_IDLE = "idle";
+    public final static String STATUS_PLAYING = "play";
     
     @Id @GeneratedValue 
     @Column(name = "id")
@@ -58,10 +63,18 @@ public class Player {
     }
 
     public String getEmail() {
+        
+        String email = this.email;
+        if (email != null){
+            email = email.toLowerCase();
+        }
         return email;
     }
 
     public void setEmail(String email) {
+        if (email != null){
+            email = email.toLowerCase();
+        }
         this.email = email;
     }
 
@@ -87,6 +100,6 @@ public class Player {
 
     public void setStatus(String status) {
         this.status = status;
-    }
+    }       
     
 }

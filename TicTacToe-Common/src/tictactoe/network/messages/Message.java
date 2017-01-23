@@ -6,7 +6,7 @@ import java.util.List;
 
 public class Message {
     
-    List<Error> errors; 
+    List<Error> errors = new ArrayList<>(); 
 
     public List<Error> getErrors() {
         return errors;
@@ -17,9 +17,6 @@ public class Message {
     }
     
     public void addError(Error error){
-        if(this.errors == null){
-            this.errors = new ArrayList<Error>();
-        }
         this.errors.add(error);
     }
     

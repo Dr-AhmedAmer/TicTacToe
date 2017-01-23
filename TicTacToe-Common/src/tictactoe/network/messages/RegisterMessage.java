@@ -11,10 +11,18 @@ public class RegisterMessage extends Message {
      public RegisterMessage(){}
     
     public String getEmail() {
+        
+        String email = this.email;
+        if (email != null){
+            email = email.toLowerCase();
+        }
         return email;
     }
 
     public void setEmail(String email) {
+        if (email != null){
+            email = email.toLowerCase();
+        }
         this.email = email;
     }
 
