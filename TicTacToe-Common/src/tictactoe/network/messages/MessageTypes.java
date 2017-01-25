@@ -14,4 +14,8 @@ public class MessageTypes {
     public final static String MSG_TYPE_AUTH = "auth";
     public final static String MSG_TYPE_REG = "reg";
     public final static String MSG_TYPE_LIST = "list";
+    public final static String MSG_TYPE_GAME_REQUEST="game-request";
+    public final static String MSG_TYPE_GAME_RESPONSE="game-response";
+    public final static String MSG_TYPE_GAME_MOVE="game-move";
+
 }

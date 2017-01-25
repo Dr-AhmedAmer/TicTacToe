@@ -14,11 +14,18 @@ import tictactoe.helpers.ResultList;
 import tictactoe.helpers.ResultObject;
 import tictactoe.models.Player;
 import tictactoe.network.messages.AuthMessage;
+import tictactoe.network.messages.GameMoveMessage;
+import tictactoe.network.messages.GameRequestMessage;
+import tictactoe.network.messages.GameResponseMessage;
 import tictactoe.network.messages.MessageTypes;
 import tictactoe.network.messages.PlayersListMessage;
 import tictactoe.network.messages.RegisterMessage;
 
 public class Session implements Runnable{
+    
+    public interface GameMessagesListener{
+        void onGameMoveMessage(Session s, GameMoveMessage mvMsg);
+    }
     
     private BlockingQueue<String> sendQueue = new LinkedBlockingQueue<String>();
     
@@ -29,6 +36,8 @@ public class Session implements Runnable{
     private SessionManager sessionManager;
     private DBManager dbManager;
     private Player player;
+    
+    private GameMessagesListener gameMessageListener;
     
     private Runnable sendRunnable = new Runnable() {
         @Override
@@ -99,6 +108,21 @@ public class Session implements Runnable{
         this.sendQueue.add(msg);
     }
     
+    public void setGameMessageListener(GameMessagesListener listener){
+        
+        this.gameMessageListener = listener;
+    
+    }
+    
+    public void onGameMoveMessage(GameMoveMessage mvMsg){
+        
+        if(this.gameMessageListener != null){
+            
+            this.gameMessageListener.onGameMoveMessage(this, mvMsg);
+            
+        }
+    }
+    
     public void run(){
         
         while(isStarted){
@@ -163,7 +187,7 @@ public class Session implements Runnable{
                                 this.send(MessageTypes.MSG_TYPE_REG,this.objectMapper.writeValueAsString(regResult));
 
                                 break;
-
+                 
                         }
                         
                     }else{
@@ -178,6 +202,56 @@ public class Session implements Runnable{
                                 playerListMessage.setPlayerList(resultList.getResults());
                                 
                                 this.send(MessageTypes.MSG_TYPE_LIST,this.objectMapper.writeValueAsString(playerListMessage));
+                                
+                                break;
+                                
+                            case MessageTypes.MSG_TYPE_GAME_REQUEST:
+                                
+                                GameRequestMessage gameRequest = this.objectMapper.readValue(msg, GameRequestMessage.class);
+                                
+                                if(PlayerHelper.checkAvaliablePlayer(gameRequest.getSenderId(), gameRequest.getReciverId())){
+                                    
+                                 sessionManager.getSessionByPlayerId(gameRequest.getReciverId())
+                                    .send(MessageTypes.MSG_TYPE_GAME_REQUEST, this.objectMapper.writeValueAsString(gameRequest));
+                                }
+                                 break;
+                                 
+                            case MessageTypes.MSG_TYPE_GAME_RESPONSE:
+                                
+                                GameResponseMessage gameResponse = this.objectMapper.readValue(msg, GameResponseMessage.class);
+                                
+                                 sessionManager.getSessionByPlayerId(gameResponse.getReciverId())
+                                    .send(MessageTypes.MSG_TYPE_GAME_RESPONSE, this.objectMapper.writeValueAsString(gameResponse));
+                                 
+                                 if(gameResponse.getResponse() == 0){
+                                     
+                                     this.send(MessageTypes.MSG_TYPE_GAME_RESPONSE,
+                                            this.objectMapper.writeValueAsString(gameResponse));
+                                     
+                                    int tempId = gameResponse.getReciverId();
+                                    gameResponse.setReciverId(gameResponse.getSenderId());
+                                    gameResponse.setSenderId(tempId);
+                                     
+                                    sessionManager.getSessionByPlayerId(gameResponse.getReciverId())
+                                    .send(MessageTypes.MSG_TYPE_GAME_RESPONSE, this.objectMapper.writeValueAsString(gameResponse));
+                                    
+                                     Session receiver = sessionManager.getSessionByPlayerId(gameResponse.getSenderId());
+                                     
+                                     new Game(3, receiver ,this).start();
+                                     
+                                 }else{
+                                     sessionManager.getSessionByPlayerId(gameResponse.getReciverId()).send(MessageTypes.MSG_TYPE_GAME_RESPONSE,
+                                            this.objectMapper.writeValueAsString(gameResponse));
+                                 }
+                                     
+                                 
+                                 break;
+                            
+                            case MessageTypes.MSG_TYPE_GAME_MOVE:
+                                
+                                GameMoveMessage gameMvMessage = this.objectMapper.readValue(msg, GameMoveMessage.class);
+                                System.out.println("tictactoe.network.Session.run()");
+                                this.onGameMoveMessage(gameMvMessage);
                                 
                                 break;
                         }

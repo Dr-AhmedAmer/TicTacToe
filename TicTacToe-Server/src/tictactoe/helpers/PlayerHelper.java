@@ -2,6 +2,8 @@
 package tictactoe.helpers;
 
 import java.util.List;
+import java.lang.Iterable;
+import java.util.Iterator;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -23,6 +25,22 @@ public class PlayerHelper {
         
         return resultList;
         
+    }
+    
+    public static boolean checkAvaliablePlayer(int medId,int playerId){
+        
+        boolean result = false;
+        
+        ResultList<Player> resultList = getIdlePlayersExceptMe(medId);
+        
+       for(Player player: resultList.getResults()){
+           
+           if(playerId == player.getId()){
+               result = true;
+               break;
+           }
+       }
+        return result;    
     }
     
 }
