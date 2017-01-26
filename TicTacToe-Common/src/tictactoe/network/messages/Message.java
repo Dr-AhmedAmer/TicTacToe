@@ -3,6 +3,7 @@ package tictactoe.network.messages;
 
 import java.util.ArrayList;
 import java.util.List;
+import tictactoe.helpers.Error;
 
 public class Message {
     

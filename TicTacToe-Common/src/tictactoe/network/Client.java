@@ -12,8 +12,7 @@ import java.util.logging.Logger;
 public class Client {
     
     private Socket socket;
-    private Thread th;
-    
+       
     public Client(Socket socket){
         this.socket = socket;
     }

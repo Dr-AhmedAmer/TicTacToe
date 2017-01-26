@@ -12,8 +12,10 @@ import tictactoe.helpers.DBManager;
 import tictactoe.helpers.PlayerHelper;
 import tictactoe.helpers.ResultList;
 import tictactoe.helpers.ResultObject;
+import tictactoe.helpers.Utils;
 import tictactoe.models.Player;
 import tictactoe.network.messages.AuthMessage;
+import tictactoe.network.messages.AuthResultMessage;
 import tictactoe.network.messages.GameMoveMessage;
 import tictactoe.network.messages.GameRequestMessage;
 import tictactoe.network.messages.GameResponseMessage;
@@ -36,6 +38,10 @@ public class Session implements Runnable{
     private SessionManager sessionManager;
     private DBManager dbManager;
     private Player player;
+
+    public Player getPlayer() {
+        return player;
+    }
     
     private GameMessagesListener gameMessageListener;
     
@@ -133,13 +139,7 @@ public class Session implements Runnable{
                 
             if(type != null && msg != null){
 
-                int index = type.indexOf("=");
-
-                if(index >= 0){
-
-                    type = type.substring(index +1);
-
-                }
+                type = Utils.getType(type);
                 
                 try {
 
@@ -163,8 +163,12 @@ public class Session implements Runnable{
 
 
                                 }
+                                
+                                AuthResultMessage authResultMsg = new AuthResultMessage();
+                                authResultMsg.setErrors(authResult.getErrors());
+                                authResultMsg.setPlayer(authResult.getResult());
 
-                                this.send(MessageTypes.MSG_TYPE_AUTH,this.objectMapper.writeValueAsString(authResult));
+                                this.send(MessageTypes.MSG_TYPE_AUTH,this.objectMapper.writeValueAsString(authResultMsg));
 
                                 break;
 
@@ -184,7 +188,12 @@ public class Session implements Runnable{
 
                                 }
 
-                                this.send(MessageTypes.MSG_TYPE_REG,this.objectMapper.writeValueAsString(regResult));
+                                
+                                AuthResultMessage regResultMsg = new AuthResultMessage();
+                                regResultMsg.setErrors(regResult.getErrors());
+                                regResultMsg.setPlayer(regResult.getResult());
+                                
+                                this.send(MessageTypes.MSG_TYPE_REG,this.objectMapper.writeValueAsString(regResultMsg));
 
                                 break;
                  

@@ -9,6 +9,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
+import tictactoe.helpers.DBManager;
+import tictactoe.models.Player;
+import tictactoe.network.messages.EndGameMessage;
 import tictactoe.network.messages.GameMoveMessage;
 import tictactoe.network.messages.MessageTypes;
 
@@ -31,6 +34,8 @@ public class Game implements Runnable, Session.GameMessagesListener{
     
     private ObjectMapper objectMapper;
     
+    private DBManager dbManager;
+    
     private Map<Session, String> playersSymbols = new HashMap<>();
     
     private Thread th;
@@ -51,6 +56,7 @@ public class Game implements Runnable, Session.GameMessagesListener{
          this.p2.setGameMessageListener(this);
          
          this.objectMapper = new ObjectMapper();
+         this.dbManager = DBManager.getInstance();
          
          this.playersSymbols.put(p1, cellState.X.toString());
          this.playersSymbols.put(p2, cellState.O.toString());
@@ -116,15 +122,41 @@ public class Game implements Runnable, Session.GameMessagesListener{
                    
                    if(wState == winState.O || wState == winState.X){
                        
-                       gameMv.player.send("Win", "You won");
-                       opponent.send("Lose", "You lost");
+                       EndGameMessage endMessage = new EndGameMessage();
+                       endMessage.setStatus("Winner");
+                       
+                       try {
+                           gameMv.player.send(MessageTypes.MSG_TYPE_GAME_END, this.objectMapper.writeValueAsString(endMessage));
+                       } catch (IOException ex) {
+                           Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
+                       }
+                       
+                       Player winner = gameMv.player.getPlayer();
+                       winner.addPoints(5);
+                       this.dbManager.update(winner);
+                       
+                       endMessage.setStatus("Looser");
+                       
+                       try {
+                           opponent.send(MessageTypes.MSG_TYPE_GAME_END, this.objectMapper.writeValueAsString(endMessage));
+                       } catch (IOException ex) {
+                           Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
+                       }
                        
                        stop();
                        
                    }else if(wState == winState.Draw){
                        
-                       this.p1.send("draw", "game draw");
-                       this.p2.send("draw", "game draw");
+                        EndGameMessage endMessage = new EndGameMessage();
+                        endMessage.setStatus("Winner");
+                       
+                       try {
+                           this.p1.send(MessageTypes.MSG_TYPE_GAME_END, this.objectMapper.writeValueAsString(endMessage));
+                           this.p2.send(MessageTypes.MSG_TYPE_GAME_END, this.objectMapper.writeValueAsString(endMessage));
+                       } catch (IOException ex) {
+                           Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
+                       }
+                       
                        
                        stop();
                    }
@@ -167,10 +199,12 @@ public class Game implements Runnable, Session.GameMessagesListener{
         }
     }
     
+//    private void  updatePointsOfWinner(){
+//        Session winner = this.ga
+//    }
+    
     public winState checkWin(cellState state , int x , int y){
         
-        
-
         
         for(int i =0 ; i <this.gridSize ; i++){
             
