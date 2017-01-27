@@ -12,24 +12,29 @@ import java.util.logging.Logger;
 public class Client {
     
     private Socket socket;
+    
+    private BufferedReader reader;
+    private PrintStream printer;
        
     public Client(Socket socket){
         this.socket = socket;
+        
+        try {
+            this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            this.printer = new PrintStream(socket.getOutputStream());
+        } catch (IOException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
     }
     
     public boolean send(String msg)
     {
         boolean result;
         
-        try {
-            PrintStream ps=new PrintStream(socket.getOutputStream());
-            ps.print(msg);
-            result = true;
-        } catch (IOException ex) {
-            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-            result = false;
-        }
-        return result;
+        this.printer.print(msg);
+        
+        return true;
     }
     
     
@@ -39,8 +44,7 @@ public class Client {
         
         try {
             
-            BufferedReader d = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            msg = d.readLine();
+            msg = this.reader.readLine();
           
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);

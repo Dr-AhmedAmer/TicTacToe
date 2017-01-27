@@ -6,6 +6,10 @@ public class Error {
 
     private String description;
     
+    public Error(){
+        
+    }
+    
     public Error(String description){
         this.description = description;
     }

@@ -2,6 +2,7 @@
 package tictactoe.client.network;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -22,6 +23,19 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
         void onFailure();
     } 
     
+    public interface GameMessageListener{
+        
+        void onGameMove(int x, int y);
+        void onGameEnd(String winner);
+        
+    }
+    
+    public interface GameControlListener{
+        void onGameRequest(int senderId);
+        void onGameResponse(int senderId, int response);
+        void onPlayerList(List<Player> players);
+    }
+    
     private static SessionManager instance;
     
     private NetworkManager netMan;
@@ -29,11 +43,15 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
     private ObjectMapper objectMapper;
     
     private AuthListener authListner;
+    private GameMessageListener gameListener;
+    private GameControlListener gameControlListener;
     
     private boolean isLogging = false;
     
     private String username;
     private String password;
+    
+    private Player player;
     
     private SessionManager(){
         netMan = NetworkManager.getInstance();
@@ -50,6 +68,57 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
         }
         
         return instance;
+    }
+    
+    public void sendGameMove(int x, int y){
+        
+        GameMoveMessage msg = new GameMoveMessage();
+        
+        msg.setX(x);
+        msg.setY(y);
+        
+        try {
+            netMan.send(MessageTypes.MSG_TYPE_GAME_MOVE, objectMapper.writeValueAsString(msg));
+        } catch (IOException ex) {
+            Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }
+    
+    public void sendListPlayers(){
+        
+        netMan.send(MessageTypes.MSG_TYPE_LIST, "");
+        
+    }
+    
+    public void sendInvite(int userId){
+        
+        GameRequestMessage msg = new GameRequestMessage();
+        
+        msg.setSenderId(this.player.getId());
+        msg.setReciverId(userId);
+        
+        try {
+            netMan.send(MessageTypes.MSG_TYPE_GAME_REQUEST, objectMapper.writeValueAsString(msg));
+        } catch (IOException ex) {
+            Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void sendResponse(int receiverId, int response){
+        
+        GameResponseMessage msg = new GameResponseMessage();
+        
+        msg.setSenderId(this.player.getId());
+        msg.setReciverId(receiverId);
+        msg.setResponse(response);
+        
+        try {
+            netMan.send(MessageTypes.MSG_TYPE_GAME_RESPONSE, objectMapper.writeValueAsString(msg));
+        } catch (IOException ex) {
+            Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
     }
     
     public void login(String username, String password){
@@ -88,6 +157,62 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
         
     }
     
+    public void setGameListener(GameMessageListener listener){
+        
+        this.gameListener = listener;
+        
+    }
+    
+    private void onGameMove(GameMoveMessage msg){
+        
+        if(gameListener != null){
+            gameListener.onGameMove(msg.getX(), msg.getY());
+        }
+    }
+    
+    private void onGameEnd(EndGameMessage msg){
+        
+        if(gameListener != null){
+            gameListener.onGameEnd(msg.getStatus());
+        }
+        
+    }
+    
+    
+    public void setGameControlListener(GameControlListener listener){
+        this.gameControlListener = listener;
+    }
+    
+    public void onGameRequest(GameRequestMessage msg){
+        
+        if(gameControlListener != null){
+            
+            gameControlListener.onGameRequest(msg.getSenderId());
+            
+        }
+        
+    }
+    
+    public void onGameResponse(GameResponseMessage msg){
+        
+        if(gameControlListener != null){
+            
+            gameControlListener.onGameResponse(msg.getSenderId(), msg.getResponse());
+            
+        }
+        
+    }
+    
+    public void onPlayerList(PlayersListMessage msg){
+        
+        if(gameControlListener != null){
+            
+            gameControlListener.onPlayerList(msg.getPlayerList());
+            
+        }
+        
+    }
+    
     @Override
     public void onConnected() {
         
@@ -110,34 +235,40 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
         if(msg.getErrors().size() > 0){
             onAuthFailure();
         }else{
-            onAuthSuccess(msg.getPlayer());
+            
+            Player p = msg.getPlayer();
+            
+            onAuthSuccess(p);
+            
+            this.player = p;
+            
         }
         
     }
 
     @Override
     public void onPlayerListMessage(PlayersListMessage msg) {
-        
+        onPlayerList(msg);
     }
 
     @Override
     public void onGameRequestMessage(GameRequestMessage msg) {
-        
+        onGameRequest(msg);
     }
 
     @Override
     public void onGameResponseMessage(GameResponseMessage msg) {
-        
+        onGameResponse(msg);
     }
 
     @Override
     public void onGameMoveMessage(GameMoveMessage msg) {
-        
+        onGameMove(msg);
     }
 
     @Override
     public void onGameEndMessage(EndGameMessage msg) {
-        
+        onGameEnd(msg);
     }
     
 }
