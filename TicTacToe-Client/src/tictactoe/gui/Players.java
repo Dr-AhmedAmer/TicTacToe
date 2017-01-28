@@ -1,3 +1,5 @@
+package tictactoe.gui;
+	
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +21,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-public class GuiTest extends Application {
+public class Players extends Application {
 
     private boolean playable = true;
     private boolean turnX = true;
