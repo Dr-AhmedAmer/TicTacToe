@@ -1,36 +1,44 @@
 package tictactoe.gui;
 
-import com.sun.javafx.scene.control.skin.LabeledText;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import tictactoe.client.game.GameManager;
 import tictactoe.client.network.SessionManager;
@@ -38,18 +46,13 @@ import tictactoe.models.Player;
 
 public class Game extends Application {
 
-	ListView<String> listView = new ListView<String>();
+	ListView<Player> listView = new ListView<Player>();
 	private SessionManager sMan = SessionManager.getInstance();
 	private GameManager gMan = GameManager.getInstance();
 	private boolean playable = true;
 	private boolean turnX = true;
 	private Tile[][] board = new Tile[3][3];
 	private List<Combo> combos = new ArrayList<>();
-	private HashMap<String,Integer> playersmap=new HashMap<String,Integer>();
-	private final Image OFFLINE = new Image("file:offline.png");
-	private final Image ONLINE = new Image("file:online.png");
-	private Image[] listOfImages = {ONLINE, OFFLINE};
-
 	private SessionManager.GameControlListener gameControlListener = new SessionManager.GameControlListener() {
 		@Override
 		public void onGameRequest(int senderId) {
@@ -70,43 +73,47 @@ public class Game extends Application {
 			} else {
 				ObservableList<Player> playerslist = FXCollections.observableArrayList(players);
 				playerslist.forEach(p -> {
-					listView.getItems().add(p.getDisplayName());
-					playersmap.put(p.getDisplayName(), p.getId());
-					
+					listView.getItems().add(p);
 				});
 				listView.setOnMouseClicked((MouseEvent event) -> {
 						if (event.getButton().equals(MouseButton.PRIMARY)) {
 							if (event.getClickCount() == 2) {
-								
-								sMan.sendInvite(playersmap.get(listView.getSelectionModel()
-                                                    .getSelectedItem()));//your code here  
-								System.out.println("id" + playersmap.get(listView.getSelectionModel()
-                                                    .getSelectedItem()));
+								sMan.sendInvite(listView.getSelectionModel().getSelectedItem().getId());
+								System.out.println("player: "+listView.getSelectionModel().getSelectedItem().getId());
 							}
 						}
-
 					});
 
-				//				listView.setCellFactory(param -> new ListCell<String>() {
-				//					private ImageView imageView = new ImageView();
-				//
-				//					@Override
-				//					public void updateItem(String name, boolean empty) {
-				//						super.updateItem(name, empty);
-				//						if (empty) {
-				//							setText(null);
-				//							setGraphic(null);
-				//						} else {
-				//							if (name.equals("ONLINE")) {
-				//								imageView.setImage(listOfImages[0]);
-				//							} else if (name.equals("OFFLINE")) {
-				//								imageView.setImage(listOfImages[1]);
-				//							}
-				//							setText(name);
-				//							setGraphic(imageView);
-				//						}
-				//					}
-				//				});
+				listView.setCellFactory(parm -> new ListCell<Player>() {
+            private final ImageView imageView = new ImageView();
+
+           @Override
+            public void updateItem(Player player, boolean empty) {
+                super.updateItem(player, empty);
+                if (empty) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    HBox hBox = new HBox();
+                    Text name = new Text(player.getDisplayName());
+					
+                    ImageView statusImageView = new ImageView();
+                    Image statusImage = new Image(getClass().getClassLoader().getResource("images/" + player.getStatus()+ ".png").toString(), 16, 16,true,true);
+                    statusImageView.setImage(statusImage);
+
+                    ImageView pictureImageView = new ImageView();
+                    Image image = new Image(getClass().getClassLoader().getResource("images/" + player.getStatus()+ ".png").toString(),50,50,true,true);
+                    pictureImageView.setImage(image);
+
+                    hBox.getChildren().addAll(statusImageView, pictureImageView, name);
+                    hBox.setAlignment(Pos.CENTER_LEFT);
+
+                    setGraphic(hBox);
+                   
+                }
+            }
+        });
+
 			}
 
 		}
@@ -133,15 +140,17 @@ public class Game extends Application {
 	};
 
 	private Parent createContent() {
-		boardPane.setPrefSize(600, 600);
+		boardPane.setPrefSize(450, 450);
+		root.setPrefSize(650, 650);
 
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 3; j++) {
 				Tile tile = new Tile();
-				tile.setTranslateX(j * 200);
-				tile.setTranslateY(i * 200);
+				tile.setTranslateX(j * 150);
+				tile.setTranslateY(i * 150);
 				tile.setX(j);
 				tile.setY(i);
+				
 				boardPane.getChildren().add(tile);
 				board[j][i] = tile;
 			}
@@ -160,9 +169,56 @@ public class Game extends Application {
 		// diagonals
 		combos.add(new Combo(board[0][0], board[1][1], board[2][2]));
 		combos.add(new Combo(board[2][0], board[1][1], board[0][2]));
-
+		
+		listView.setPrefWidth(200);
 		boardPane.getChildren().add(listView);
-		root.setCenter(boardPane);
+		
+		VBox chatVbox =new VBox();
+		HBox chatHbox =new HBox();
+		chatHbox.setPrefSize(450,30);
+		TextArea chatText=new TextArea();
+		chatText.setPrefSize(350, 30);
+		Button chatSend =new Button("Send");
+		chatSend.setPrefWidth(70);
+		chatSend.setPrefHeight(Double.MAX_VALUE);
+		Button chatEmojBtn=new Button("emoj");
+		chatEmojBtn.setPrefWidth(30);
+		chatEmojBtn.setPrefHeight(Double.MAX_VALUE);
+		
+		ImageView chatEmoj=new ImageView();
+		
+		chatEmojBtn.setGraphic(chatEmoj);
+		chatHbox.getChildren().addAll(chatText,chatSend,chatEmojBtn);
+		ScrollPane chatScroll =new ScrollPane();
+		chatScroll.setPrefSize(600, 150);
+		chatScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+		ListView chatList =new ListView();
+		chatScroll.setContent(chatList);
+		chatList.setPrefSize(600,150);
+		chatVbox.getChildren().addAll(boardPane,chatScroll,chatHbox);
+		
+		
+		Menu game = new Menu("_Game");
+        game.setMnemonicParsing(true); 
+        MenuItem newItem = new MenuItem("New");
+        MenuItem openItem = new MenuItem("Open");
+	MenuItem saveItem = new MenuItem("Save");
+        MenuItem exitItem = new MenuItem("Exit");
+        game.getItems().addAll(newItem, openItem, saveItem, new SeparatorMenuItem(), exitItem);
+	
+	Menu player = new Menu("_Player");
+        game.setMnemonicParsing(true); 
+        MenuItem registerItem = new MenuItem("Register");
+        MenuItem signItem = new MenuItem("Signin");
+	MenuItem listItem = new MenuItem("List");
+        MenuItem chatItem = new MenuItem("Chat");
+        player.getItems().addAll(registerItem,signItem,listItem,chatItem);
+	
+	MenuBar bar=new MenuBar();
+	bar.getMenus().addAll(game,player);
+		bar.setPrefHeight(20);
+		root.setTop(bar);
+		root.setCenter(chatVbox);
 		root.setRight(listView);
 
 		return root;
@@ -174,6 +230,7 @@ public class Game extends Application {
 		gMan.setGameListener(gameListener);
 		sMan.setGameControlListener(gameControlListener);
 		sMan.sendListPlayers();
+		primaryStage.setResizable(false);
 		primaryStage.setScene(new Scene(createContent()));
 		primaryStage.show();
 	}
@@ -245,7 +302,7 @@ public class Game extends Application {
 		}
 
 		public Tile() {
-			Rectangle border = new Rectangle(200, 200);
+			Rectangle border = new Rectangle(150, 150);
 			border.setFill(null);
 			border.setStroke(Color.BLACK);
 
