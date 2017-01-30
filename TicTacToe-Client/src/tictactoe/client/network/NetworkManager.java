@@ -115,6 +115,19 @@ public class NetworkManager implements Runnable{
         this.sendThread.start();
     }
     
+    public void stop(){
+        
+        isStarted = false;
+        
+        if(this.sendThread != null){
+            this.sendThread.interrupt();
+        }
+        
+        if(this.client != null ){
+            this.client.close();
+        }
+    }
+    
     public void send(String type, String msg){
         
         if(this.isConnected){
@@ -340,5 +353,6 @@ public class NetworkManager implements Runnable{
         }
         
     }
+    
     
 }
