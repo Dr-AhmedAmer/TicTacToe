@@ -15,6 +15,7 @@ import tictactoe.network.messages.GameRequestMessage;
 import tictactoe.network.messages.GameResponseMessage;
 import tictactoe.network.messages.MessageTypes;
 import tictactoe.network.messages.PlayersListMessage;
+import tictactoe.network.messages.RegisterMessage;
 
 public class SessionManager implements NetworkManager.ConnectionListener, NetworkManager.MessageListener {
     
@@ -47,9 +48,11 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
     private GameControlListener gameControlListener;
     
     private boolean isLogging = false;
+    private boolean isRegistering = false;
     
     private String username;
     private String password;
+    private String displayName;
     
     private Player player;
     
@@ -135,11 +138,32 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
         
     }
     
+     public void register(String email, String password,String displayName){
+        
+         if(isRegistering)
+            return;
+        
+        isRegistering = true;
+         
+        this.username = username;
+        this.password = password;
+        this.displayName = displayName;
+        
+        netMan.connect();
+        
+    }
+     
+     public void stop(){
+         netMan.stop();
+     }
+    
     public void setAuthListener(AuthListener listener){
         this.authListner = listener;
     }
 
     private void onAuthSuccess(Player p){
+        isLogging = false;
+        isRegistering = false;
         
         if(authListner != null){
             authListner.onSuccess(p);
@@ -150,6 +174,7 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
     private void onAuthFailure(){
         
         isLogging = false;
+        isRegistering = false;
         
         if(authListner != null){
             authListner.onFailure();
@@ -215,16 +240,27 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
     
     @Override
     public void onConnected() {
-        
-        AuthMessage msg = new AuthMessage();
-        
-        msg.setUserName(this.username);
-        msg.setPassword(this.password);
-        
-        try {
-            netMan.send(MessageTypes.MSG_TYPE_AUTH, objectMapper.writeValueAsString(msg));
-        } catch (IOException ex) {
-            Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
+        if(isLogging){
+            AuthMessage msg = new AuthMessage();
+            msg.setUserName(this.username);
+            msg.setPassword(this.password);
+
+            try {
+                netMan.send(MessageTypes.MSG_TYPE_AUTH, objectMapper.writeValueAsString(msg));
+            } catch (IOException ex) {
+                Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }else if (isRegistering){
+            RegisterMessage msg = new RegisterMessage();
+            msg.setEmail(this.username);
+            msg.setPassword(this.password);
+            msg.setDisplayName(this.displayName);
+
+            try {
+                netMan.send(MessageTypes.MSG_TYPE_REG, objectMapper.writeValueAsString(msg));
+            } catch (IOException ex) {
+                Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
         
     }

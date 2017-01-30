@@ -1,5 +1,7 @@
 package tictactoe.gui;
 
+import com.sun.java.swing.plaf.windows.resources.windows;
+import com.sun.javafx.stage.WindowHelper;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -102,11 +104,23 @@ public class Login extends Application {
 			pw = pf.getText();
 			sMan.login(user, pw);
 		});
+                
 		bp.setTop(hb);
 		bp.setCenter(gridPane);
-
+                
+                
 		Scene scene = new Scene(bp);
 		primaryStage.setScene(scene);
 		primaryStage.show();
 	}
+
+    @Override
+    public void stop() throws Exception {
+        
+        sMan.stop();
+        
+        super.stop(); //To change body of generated methods, choose Tools | Templates.
+    }
+        
+        
 }
