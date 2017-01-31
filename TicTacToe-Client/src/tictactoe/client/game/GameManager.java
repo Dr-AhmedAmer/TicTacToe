@@ -3,14 +3,18 @@ package tictactoe.client.game;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import tictactoe.client.network.SessionManager;
+import tictactoe.models.Player;
 import tictactoe.network.messages.EndGameMessage;
 import tictactoe.network.messages.GameMoveMessage;
 
 public class GameManager implements SessionManager.GameMessageListener{
+
+   
    
     public interface GameListener{
         void onGameMove(int x, int y);
         void onGameEnd(String winner);
+        void onGameChatTextMessage(Player sender,String content);
     }
     
     private static GameManager instance;
@@ -65,6 +69,14 @@ public class GameManager implements SessionManager.GameMessageListener{
         
     }
     
+    private void onGameChatTextMessageCallback(Player sender,String content){
+        
+        if(gameListener != null){
+            gameListener.onGameChatTextMessage(sender, content);
+        }
+        
+    }
+    
     @Override
     public void onGameMove(int x, int y) {
         onGameMoveCallback(x, y);
@@ -73,6 +85,11 @@ public class GameManager implements SessionManager.GameMessageListener{
     @Override
     public void onGameEnd(String winner) {
         onGameEndCallback(winner);
+    }
+    
+     @Override
+    public void onGameChatTextMessage(Player sender, String content) {
+        
     }
     
 }

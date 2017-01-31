@@ -10,6 +10,7 @@ import tictactoe.models.Player;
 import tictactoe.network.messages.AuthMessage;
 import tictactoe.network.messages.AuthResultMessage;
 import tictactoe.network.messages.EndGameMessage;
+import tictactoe.network.messages.GameChatTextMessage;
 import tictactoe.network.messages.GameMoveMessage;
 import tictactoe.network.messages.GameRequestMessage;
 import tictactoe.network.messages.GameResponseMessage;
@@ -18,6 +19,8 @@ import tictactoe.network.messages.PlayersListMessage;
 import tictactoe.network.messages.RegisterMessage;
 
 public class SessionManager implements NetworkManager.ConnectionListener, NetworkManager.MessageListener {
+
+    
     
     public interface AuthListener{
         void onSuccess(Player p);
@@ -28,6 +31,7 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
         
         void onGameMove(int x, int y);
         void onGameEnd(String winner);
+        void onGameChatTextMessage(Player sender,String content);
         
     }
     
@@ -197,6 +201,13 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
         }
     }
     
+    private void onGameChatTextMessageCallback(GameChatTextMessage msg){
+        
+        if(gameListener != null){
+            gameListener.onGameChatTextMessage(msg.getSender(), msg.getContent());
+        }
+    }
+    
     private void onGameEnd(EndGameMessage msg){
         
         if(gameListener != null){
@@ -302,6 +313,11 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
     @Override
     public void onGameMoveMessage(GameMoveMessage msg) {
         onGameMove(msg);
+    }
+    
+    @Override
+    public void onGameChatTextMessage(GameChatTextMessage msg) {
+        onGameChatTextMessageCallback(msg);
     }
 
     @Override

@@ -16,6 +16,7 @@ import tictactoe.helpers.Utils;
 import tictactoe.models.Player;
 import tictactoe.network.messages.AuthMessage;
 import tictactoe.network.messages.AuthResultMessage;
+import tictactoe.network.messages.GameChatTextMessage;
 import tictactoe.network.messages.GameMoveMessage;
 import tictactoe.network.messages.GameRequestMessage;
 import tictactoe.network.messages.GameResponseMessage;
@@ -27,6 +28,8 @@ public class Session implements Runnable{
     
     public interface GameMessagesListener{
         void onGameMoveMessage(Session s, GameMoveMessage mvMsg);
+        void onGameChatTextMessage(Session s ,GameChatTextMessage textMsg);
+        void onGameEnd(Session s);
     }
     
     private BlockingQueue<String> sendQueue = new LinkedBlockingQueue<String>();
@@ -102,9 +105,13 @@ public class Session implements Runnable{
             this.player.setStatus(Player.STATUS_OFFLINE);
             this.dbManager.update(this.player);
         }
+        onGameEnd();
             
     }
     
+    public boolean isStarted(){
+        return isStarted;
+    }
     public void send(String type,String msg){
         
         type ="type=" + type + "\n";
@@ -128,6 +135,24 @@ public class Session implements Runnable{
             
         }
     }
+    
+     public void onGameChatTextMessage(GameChatTextMessage textMsg){
+        
+        if(this.gameMessageListener != null){
+            
+            this.gameMessageListener.onGameChatTextMessage(this, textMsg);
+            
+        }
+    }
+     public void onGameEnd(){
+        
+        if(this.gameMessageListener != null){
+            
+            this.gameMessageListener.onGameEnd(this);
+            
+        }
+    }
+      
     
     public void run(){
         
@@ -266,6 +291,14 @@ public class Session implements Runnable{
                                 this.onGameMoveMessage(gameMvMessage);
                                 
                                 break;
+                                
+                            case MessageTypes.MSG_TYPE_CHAT_TEXT:
+            
+                                GameChatTextMessage gameChatTextMessage = this.objectMapper.readValue(msg, GameChatTextMessage.class);
+                               
+                                this.onGameChatTextMessage(gameChatTextMessage);
+                                
+                                break;     
                         }
                     }
                     

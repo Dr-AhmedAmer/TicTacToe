@@ -21,6 +21,7 @@ import tictactoe.network.Client;
 import tictactoe.network.messages.AuthMessage;
 import tictactoe.network.messages.AuthResultMessage;
 import tictactoe.network.messages.EndGameMessage;
+import tictactoe.network.messages.GameChatTextMessage;
 import tictactoe.network.messages.GameMoveMessage;
 import tictactoe.network.messages.GameRequestMessage;
 import tictactoe.network.messages.GameResponseMessage;
@@ -40,6 +41,7 @@ public class NetworkManager implements Runnable{
         void onGameRequestMessage(GameRequestMessage msg);
         void onGameResponseMessage(GameResponseMessage msg);
         void onGameMoveMessage(GameMoveMessage msg);
+        void onGameChatTextMessage(GameChatTextMessage msg);
         void onGameEndMessage(EndGameMessage msg);
     
     }
@@ -230,6 +232,20 @@ public class NetworkManager implements Runnable{
         }
         
     }
+    
+    public void onGameChatTextMessage(GameChatTextMessage msg){
+        
+        synchronized(this.msgListenersList){
+            
+          for(MessageListener listener : this.msgListenersList){
+              
+              listener.onGameChatTextMessage(msg);
+              
+          }  
+            
+        }
+        
+    }
 
     public void onGameEndMsg(EndGameMessage msg){
         
@@ -308,6 +324,14 @@ public class NetworkManager implements Runnable{
                                 EndGameMessage endMsg = this.objectMapper.readValue(msg, EndGameMessage.class);
                                 
                                 onGameEndMsg(endMsg);
+                                
+                                break;
+                                
+                             case MessageTypes.MSG_TYPE_CHAT_TEXT:
+
+                                GameChatTextMessage chatTextMessage = this.objectMapper.readValue(msg, GameChatTextMessage.class);
+                                
+                                 onGameChatTextMessage(chatTextMessage);
                                 
                                 break;
                         }

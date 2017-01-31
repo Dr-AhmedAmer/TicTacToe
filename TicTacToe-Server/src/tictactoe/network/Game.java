@@ -12,16 +12,26 @@ import org.codehaus.jackson.map.ObjectMapper;
 import tictactoe.helpers.DBManager;
 import tictactoe.models.Player;
 import tictactoe.network.messages.EndGameMessage;
+import tictactoe.network.messages.GameChatTextMessage;
 import tictactoe.network.messages.GameMoveMessage;
 import tictactoe.network.messages.MessageTypes;
 
 
 public class Game implements Runnable, Session.GameMessagesListener{
+
+   
+
+   
     
     private class GameMove{
         
         public Session player;
         public GameMoveMessage mvMsg;
+    }
+    
+    private class GameTextMsg{
+        public Session player;
+        public GameChatTextMessage textMsg;
     }
     
     private int moveCount;
@@ -43,6 +53,7 @@ public class Game implements Runnable, Session.GameMessagesListener{
     private boolean isStarted = false;
     
     private BlockingQueue<GameMove> queue = new LinkedBlockingQueue<GameMove>();
+//    private BlockingQueue<GameTextMsg> chatQueue = new LinkedBlockingQueue<>();
     
    public Game(int gridSize, Session p1, Session p2){
         
@@ -55,8 +66,17 @@ public class Game implements Runnable, Session.GameMessagesListener{
          this.p1.setGameMessageListener(this);
          this.p2.setGameMessageListener(this);
          
+         
          this.objectMapper = new ObjectMapper();
          this.dbManager = DBManager.getInstance();
+         
+         
+        Player player1 = this.p1.getPlayer();
+        Player player2 = this.p2.getPlayer();
+        player1.setStatus(Player.STATUS_PLAYING);
+        player2.setStatus(Player.STATUS_PLAYING);
+        this.dbManager.update(player1);
+        this.dbManager.update(player2);
          
          this.playersSymbols.put(p1, cellState.X.toString());
          this.playersSymbols.put(p2, cellState.O.toString());
@@ -104,6 +124,7 @@ public class Game implements Runnable, Session.GameMessagesListener{
            
            try {
                GameMove gameMv = this.queue.take();
+               
                
                String symblStr = this.playersSymbols.get(gameMv.player);
                cellState symbl = cellState.valueOf(symblStr);
@@ -182,6 +203,32 @@ public class Game implements Runnable, Session.GameMessagesListener{
         gameMv.mvMsg = mvMsg;
         
         this.queue.add(gameMv);
+    }
+    
+     @Override
+    public void onGameChatTextMessage(Session s, GameChatTextMessage textMsg) {
+        try {
+            GameTextMsg msg = new GameTextMsg();
+            msg.player = s;
+            msg.textMsg = textMsg;
+            
+            Session opponent = this.getOpponent(s);
+            opponent.send(MessageTypes.MSG_TYPE_CHAT_TEXT, this.objectMapper.writeValueAsString(textMsg));
+        } catch (IOException ex) {
+            Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+     @Override
+    public void onGameEnd(Session s) {
+       Session opponent = getOpponent(s);
+       
+       if(opponent.isStarted()){
+           Player player = opponent.getPlayer();
+           player.setStatus(Player.STATUS_IDLE);
+           this.dbManager.update(player);
+       }
+       stop();
     }
     
     private boolean validateMove(int x , int y){

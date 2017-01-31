@@ -156,6 +156,11 @@ public class Game extends Application {
 		public void onGameEnd(String winner) {
 			System.out.println(winner);
 		}
+
+            @Override
+            public void onGameChatTextMessage(Player sender, String content) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
 	};
 
 	private Parent createContent() {

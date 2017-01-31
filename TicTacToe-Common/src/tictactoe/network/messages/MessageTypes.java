@@ -18,5 +18,7 @@ public class MessageTypes {
     public final static String MSG_TYPE_GAME_RESPONSE="game-response";
     public final static String MSG_TYPE_GAME_MOVE="game-move";
     public final static String MSG_TYPE_GAME_END="game-end";
+    public final static String MSG_TYPE_CHAT_TEXT="chat-text";
+    public final static String MSG_TYPE_CHAT_LIKE="chat-like";
 
 }
