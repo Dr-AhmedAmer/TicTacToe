@@ -229,18 +229,21 @@ public class Session implements Runnable{
                                 
                                 GameResponseMessage gameResponse = this.objectMapper.readValue(msg, GameResponseMessage.class);
                                 
+                                 gameResponse.setSymbol("O");
                                  sessionManager.getSessionByPlayerId(gameResponse.getReciverId())
                                     .send(MessageTypes.MSG_TYPE_GAME_RESPONSE, this.objectMapper.writeValueAsString(gameResponse));
                                  
                                  if(gameResponse.getResponse() == 0){
                                      
+                                     gameResponse.setSymbol("X");
                                      this.send(MessageTypes.MSG_TYPE_GAME_RESPONSE,
                                             this.objectMapper.writeValueAsString(gameResponse));
                                      
                                     int tempId = gameResponse.getReciverId();
                                     gameResponse.setReciverId(gameResponse.getSenderId());
                                     gameResponse.setSenderId(tempId);
-                                     
+                                    
+        
                                     sessionManager.getSessionByPlayerId(gameResponse.getReciverId())
                                     .send(MessageTypes.MSG_TYPE_GAME_RESPONSE, this.objectMapper.writeValueAsString(gameResponse));
                                     

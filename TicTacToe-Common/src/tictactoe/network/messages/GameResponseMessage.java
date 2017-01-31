@@ -6,6 +6,15 @@ public class GameResponseMessage extends Message {
     private int senderId;
     private int reciverId;
     private int response;
+    private String symbol;
+
+    public String getSymbol() {
+        return symbol;
+    }
+
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
+    }
 
     public int getResponse() {
         return response;
