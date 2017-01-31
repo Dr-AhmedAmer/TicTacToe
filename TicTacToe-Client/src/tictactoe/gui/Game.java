@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Scanner;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -51,17 +52,29 @@ public class Game extends Application {
 	private GameManager gMan = GameManager.getInstance();
 	private boolean playable = true;
 	private boolean turnX = true;
+        private int response;
 	private Tile[][] board = new Tile[3][3];
 	private List<Combo> combos = new ArrayList<>();
 	private SessionManager.GameControlListener gameControlListener = new SessionManager.GameControlListener() {
 		@Override
 		public void onGameRequest(int senderId) {
+                    System.out.println("request from" +senderId);
+                    System.out.println("enter response");
+                    Scanner sc = new Scanner(System.in);
+                    response=sc.nextInt();
+                    sMan.sendResponse(senderId, response);
 
 		}
 
 		@Override
 		public void onGameResponse(int senderId, int response) {
-
+                    
+                    if(response == 0){
+                        System.out.println("player accepted");
+                    }else{
+                        System.out.println("player declined");
+                    }
+                    
 		}
 
 		@Override
@@ -127,8 +140,7 @@ public class Game extends Application {
 //			if (turnX) {
 //				return;
 //			}
-			board[x][y].drawO();
-			turnX = true;
+			board[x][y].drawMove("X");
 			checkState();
 
 		}
@@ -312,17 +324,15 @@ public class Game extends Application {
 			getChildren().addAll(border, text);
 
 			setOnMouseClicked(event -> {
-				if (!playable) {
-					return;
-				}
+//				if (!playable) {
+//					return;
+//				}
 
 				if (event.getButton() == MouseButton.PRIMARY) {
-					if (!turnX) {
-						return;
-					}
+					
 					gMan.move(this.x, this.y);
 					System.out.println(this.x + " " + this.y);
-					drawX();
+					drawMove("O");
 					turnX = false;
 					checkState();
 				} else if (event.getButton() == MouseButton.SECONDARY) {
@@ -343,8 +353,13 @@ public class Game extends Application {
 			return text.getText();
 		}
 
-		private void drawX() {
-			text.setText("X");
+		private void drawMove(String turn) {
+                    if (turn.equals("X")) {
+                        text.setText("X");
+                    }else{
+                        			text.setText("X");
+
+                    }
 		}
 
 		private void drawO() {
