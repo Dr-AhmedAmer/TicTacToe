@@ -202,6 +202,7 @@ public class Game implements Runnable, Session.GameMessagesListener{
 //    private void  updatePointsOfWinner(){
 //        Session winner = this.ga
 //    }
+	
     
     public winState checkWin(cellState state , int x , int y){
         

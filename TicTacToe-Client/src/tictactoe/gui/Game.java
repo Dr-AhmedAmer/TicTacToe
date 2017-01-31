@@ -9,6 +9,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
@@ -50,8 +51,11 @@ public class Game extends Application {
 	private SessionManager sMan = SessionManager.getInstance();
 	private GameManager gMan = GameManager.getInstance();
 	private boolean playable = true;
-	private boolean yourTurn = true;
-	private String symbol="X";
+	private boolean yourTurn = false;
+	private String playerSymbol;
+	private String opponentSymbol;
+	private Color opponentColor=Color.BLUE;
+	private Color playerColor=Color.RED;
     private int response;
 	private Tile[][] board = new Tile[3][3];
 	private List<Combo> combos = new ArrayList<>();
@@ -71,8 +75,15 @@ public class Game extends Application {
                     
                     if(response == 0){
                         System.out.println("player accepted");
-			gMan.startGame();
-                        System.out.println("ur symbol"+" "+symbol);
+						gMan.startGame();
+						if(symbol.equals("X")){
+							yourTurn=true;
+							opponentSymbol="O";
+						}else{
+							opponentSymbol="X";
+						}
+                        playerSymbol=symbol;
+						
                     }else{
                         System.out.println("player declined");
                     }
@@ -136,22 +147,14 @@ public class Game extends Application {
 	private GameManager.GameListener gameListener = new GameManager.GameListener() {
 		@Override
 		public void onGameMove(int x, int y) {
-			if (!yourTurn) {
-				System.out.println("from o return if x");
-				return;
-			}
-			System.out.println("x= "+x+", y= "+y);
-			board[x][y].drawMove(symbol);
-			yourTurn=true;
-			symbol="O";
-			System.out.println("from o turn x");
+			board[x][y].drawMove(opponentSymbol);
 			checkState();
-
+			yourTurn=true;
 		}
 
 		@Override
 		public void onGameEnd(String winner) {
-
+			System.out.println(winner);
 		}
 	};
 
@@ -236,13 +239,11 @@ public class Game extends Application {
 		root.setTop(bar);
 		root.setCenter(chatVbox);
 		root.setRight(listView);
-
 		return root;
 	}
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
-
 		gMan.setGameListener(gameListener);
 		sMan.setGameControlListener(gameControlListener);
 		sMan.sendListPlayers();
@@ -262,19 +263,24 @@ public class Game extends Application {
 	}
 
 	private void playWinAnimation(Combo combo) {
-		Line line = new Line();
-		line.setStartX(combo.tiles[0].getCenterX());
-		line.setStartY(combo.tiles[0].getCenterY());
-		line.setEndX(combo.tiles[0].getCenterX());
-		line.setEndY(combo.tiles[0].getCenterY());
+		Platform.runLater(() -> {
+			Line line = new Line();
+			line.setFill(playerColor);
+			line.setStrokeWidth(5);
+			line.setStartX(combo.tiles[0].getCenterX());
+			line.setStartY(combo.tiles[0].getCenterY());
+			line.setEndX(combo.tiles[0].getCenterX());
+			line.setEndY(combo.tiles[0].getCenterY());
 
-		boardPane.getChildren().add(line);
+			boardPane.getChildren().add(line);
 
-		Timeline timeline = new Timeline();
-		timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(1),
-			new KeyValue(line.endXProperty(), combo.tiles[2].getCenterX()),
-			new KeyValue(line.endYProperty(), combo.tiles[2].getCenterY())));
-		timeline.play();
+			Timeline timeline = new Timeline();
+			timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(1),
+				new KeyValue(line.endXProperty(), combo.tiles[2].getCenterX()),
+				new KeyValue(line.endYProperty(), combo.tiles[2].getCenterY())));
+			timeline.play();
+		});
+		
 	}
 
 	private class Combo {
@@ -289,7 +295,6 @@ public class Game extends Application {
 			if (tiles[0].getValue().isEmpty()) {
 				return false;
 			}
-
 			return tiles[0].getValue().equals(tiles[1].getValue())
 				&& tiles[0].getValue().equals(tiles[2].getValue());
 		}
@@ -333,18 +338,14 @@ public class Game extends Application {
 				}
 
 				if (event.getButton() == MouseButton.PRIMARY) {
-//					if(!yourTurn){
-//						return;
-//					}
-					drawMove(symbol);
-					gMan.move(this.x, this.y);
-					yourTurn = false;
-					symbol="X";
-					System.out.println("from x turn o "+yourTurn);
-					
-					checkState();
-				} else if (event.getButton() == MouseButton.SECONDARY) {
-
+					if(yourTurn){
+						drawMove(playerSymbol);
+						checkState();
+						gMan.move(this.x, this.y);
+						yourTurn = false;
+					}else{
+						return;
+					}
 				}
 			});
 		}
@@ -363,15 +364,12 @@ public class Game extends Application {
 
 		private void drawMove(String turn) {
                     if (turn.equals("X")) {
+						text.setFill(playerColor);
                         text.setText("X");
                     }else{
+						text.setFill(opponentColor);
                         text.setText("O");
-
                     }
-		}
-
-		private void drawO() {
-			text.setText("O");
 		}
 	}
 
