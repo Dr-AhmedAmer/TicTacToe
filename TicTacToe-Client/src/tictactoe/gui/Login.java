@@ -29,8 +29,6 @@ public class Login extends Application {
 				Platform.runLater(new Runnable() {
 					@Override
 					public void run() {
-						System.out.println("7asal");
-						System.err.println(p.getEmail());
 						Game g = new Game();
 						try {
 							g.start(sta);
@@ -110,7 +108,7 @@ public class Login extends Application {
                 
                 
 		Scene scene = new Scene(bp);
-                bp.setPrefSize(650, 650);
+        bp.setPrefSize(650, 650);
 		primaryStage.setScene(scene);
 		primaryStage.show();
 	}

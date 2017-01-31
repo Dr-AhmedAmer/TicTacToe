@@ -47,12 +47,12 @@ import tictactoe.models.Player;
 
 public class Game extends Application {
 
-	ListView<Player> listView = new ListView<Player>();
+	ListView<Player> listView = new ListView<>();
 	private SessionManager sMan = SessionManager.getInstance();
 	private GameManager gMan = GameManager.getInstance();
 	private boolean playable = true;
 	private boolean turnX = true;
-        private int response;
+    private int response;
 	private Tile[][] board = new Tile[3][3];
 	private List<Combo> combos = new ArrayList<>();
 	private SessionManager.GameControlListener gameControlListener = new SessionManager.GameControlListener() {
@@ -71,6 +71,7 @@ public class Game extends Application {
                     
                     if(response == 0){
                         System.out.println("player accepted");
+						gMan.startGame();
                     }else{
                         System.out.println("player declined");
                     }
@@ -79,8 +80,6 @@ public class Game extends Application {
 
 		@Override
 		public void onPlayerList(List<Player> players) {
-			System.out.println(".onPlayerList()");
-			System.out.println(players.size());
 			if (players == null) {
 				System.out.println("Empty");
 			} else {
@@ -92,7 +91,6 @@ public class Game extends Application {
 						if (event.getButton().equals(MouseButton.PRIMARY)) {
 							if (event.getClickCount() == 2) {
 								sMan.sendInvite(listView.getSelectionModel().getSelectedItem().getId());
-								System.out.println("player: "+listView.getSelectionModel().getSelectedItem().getId());
 							}
 						}
 					});
@@ -137,10 +135,14 @@ public class Game extends Application {
 	private GameManager.GameListener gameListener = new GameManager.GameListener() {
 		@Override
 		public void onGameMove(int x, int y) {
-//			if (turnX) {
-//				return;
-//			}
-			board[x][y].drawMove("X");
+			if (turnX) {
+				System.out.println("from o return if x");
+				return;
+			}
+			System.out.println("x= "+x+", y= "+y);
+			board[x][y].drawMove("O");
+			turnX=true;
+			System.out.println("from o turn x");
 			checkState();
 
 		}
@@ -214,20 +216,20 @@ public class Game extends Application {
         game.setMnemonicParsing(true); 
         MenuItem newItem = new MenuItem("New");
         MenuItem openItem = new MenuItem("Open");
-	MenuItem saveItem = new MenuItem("Save");
+		MenuItem saveItem = new MenuItem("Save");
         MenuItem exitItem = new MenuItem("Exit");
         game.getItems().addAll(newItem, openItem, saveItem, new SeparatorMenuItem(), exitItem);
 	
-	Menu player = new Menu("_Player");
+		Menu player = new Menu("_Player");
         game.setMnemonicParsing(true); 
         MenuItem registerItem = new MenuItem("Register");
         MenuItem signItem = new MenuItem("Signin");
-	MenuItem listItem = new MenuItem("List");
+		MenuItem listItem = new MenuItem("List");
         MenuItem chatItem = new MenuItem("Chat");
         player.getItems().addAll(registerItem,signItem,listItem,chatItem);
 	
-	MenuBar bar=new MenuBar();
-	bar.getMenus().addAll(game,player);
+		MenuBar bar=new MenuBar();
+		bar.getMenus().addAll(game,player);
 		bar.setPrefHeight(20);
 		root.setTop(bar);
 		root.setCenter(chatVbox);
@@ -324,16 +326,16 @@ public class Game extends Application {
 			getChildren().addAll(border, text);
 
 			setOnMouseClicked(event -> {
-//				if (!playable) {
-//					return;
-//				}
+				if (!playable) {
+					return;
+				}
 
 				if (event.getButton() == MouseButton.PRIMARY) {
-					
+					drawMove("X");
 					gMan.move(this.x, this.y);
-					System.out.println(this.x + " " + this.y);
-					drawMove("O");
 					turnX = false;
+					System.out.println("from x turn o "+turnX);
+					
 					checkState();
 				} else if (event.getButton() == MouseButton.SECONDARY) {
 
@@ -342,11 +344,11 @@ public class Game extends Application {
 		}
 
 		public double getCenterX() {
-			return getTranslateX() + 100;
+			return getTranslateX() + 75;
 		}
 
 		public double getCenterY() {
-			return getTranslateY() + 100;
+			return getTranslateY() + 75;
 		}
 
 		public String getValue() {
@@ -357,7 +359,7 @@ public class Game extends Application {
                     if (turn.equals("X")) {
                         text.setText("X");
                     }else{
-                        			text.setText("X");
+                        text.setText("O");
 
                     }
 		}
