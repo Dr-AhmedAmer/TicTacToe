@@ -39,7 +39,6 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import tictactoe.client.game.GameManager;
 import tictactoe.client.network.SessionManager;
@@ -51,7 +50,8 @@ public class Game extends Application {
 	private SessionManager sMan = SessionManager.getInstance();
 	private GameManager gMan = GameManager.getInstance();
 	private boolean playable = true;
-	private boolean turnX = true;
+	private boolean yourTurn = true;
+	private String symbol="X";
     private int response;
 	private Tile[][] board = new Tile[3][3];
 	private List<Combo> combos = new ArrayList<>();
@@ -135,13 +135,14 @@ public class Game extends Application {
 	private GameManager.GameListener gameListener = new GameManager.GameListener() {
 		@Override
 		public void onGameMove(int x, int y) {
-			if (turnX) {
+			if (!yourTurn) {
 				System.out.println("from o return if x");
 				return;
 			}
 			System.out.println("x= "+x+", y= "+y);
-			board[x][y].drawMove("O");
-			turnX=true;
+			board[x][y].drawMove(symbol);
+			yourTurn=true;
+			symbol="O";
 			System.out.println("from o turn x");
 			checkState();
 
@@ -331,10 +332,14 @@ public class Game extends Application {
 				}
 
 				if (event.getButton() == MouseButton.PRIMARY) {
-					drawMove("X");
+//					if(!yourTurn){
+//						return;
+//					}
+					drawMove(symbol);
 					gMan.move(this.x, this.y);
-					turnX = false;
-					System.out.println("from x turn o "+turnX);
+					yourTurn = false;
+					symbol="X";
+					System.out.println("from x turn o "+yourTurn);
 					
 					checkState();
 				} else if (event.getButton() == MouseButton.SECONDARY) {
