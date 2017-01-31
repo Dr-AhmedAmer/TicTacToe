@@ -110,6 +110,7 @@ public class Login extends Application {
                 
                 
 		Scene scene = new Scene(bp);
+                bp.setPrefSize(650, 650);
 		primaryStage.setScene(scene);
 		primaryStage.show();
 	}
