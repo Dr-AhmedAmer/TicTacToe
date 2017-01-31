@@ -67,11 +67,12 @@ public class Game extends Application {
 		}
 
 		@Override
-		public void onGameResponse(int senderId, int response) {
+		public void onGameResponse(int senderId, int response ,String symbol) {
                     
                     if(response == 0){
                         System.out.println("player accepted");
-						gMan.startGame();
+			gMan.startGame();
+                        System.out.println("ur symbol"+" "+symbol);
                     }else{
                         System.out.println("player declined");
                     }

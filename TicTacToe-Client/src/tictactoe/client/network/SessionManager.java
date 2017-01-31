@@ -33,7 +33,7 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
     
     public interface GameControlListener{
         void onGameRequest(int senderId);
-        void onGameResponse(int senderId, int response);
+        void onGameResponse(int senderId, int response,String symbol);
         void onPlayerList(List<Player> players);
     }
     
@@ -222,7 +222,7 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
         
         if(gameControlListener != null){
             
-            gameControlListener.onGameResponse(msg.getSenderId(), msg.getResponse());
+            gameControlListener.onGameResponse(msg.getSenderId(), msg.getResponse(),msg.getSymbol());
             
         }
         
