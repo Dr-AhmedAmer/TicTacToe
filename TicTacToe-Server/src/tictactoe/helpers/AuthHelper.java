@@ -54,6 +54,7 @@ public class AuthHelper {
             player.setDisplayName(msg.getDisplayName());
             player.setEmail(msg.getEmail());
             player.setPassword(msg.getPassword());
+            player.setImage(msg.getImage());
             session.save(player); 
             tx.commit();
             

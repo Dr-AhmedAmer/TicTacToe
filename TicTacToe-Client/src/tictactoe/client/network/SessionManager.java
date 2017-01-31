@@ -53,6 +53,7 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
     private String username;
     private String password;
     private String displayName;
+    private String image;
     
     private Player player;
     
@@ -138,7 +139,7 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
         
     }
     
-     public void register(String email, String password,String displayName){
+     public void register(String email, String password,String displayName,String image){
         
          if(isRegistering)
             return;
@@ -148,6 +149,7 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
         this.username = username;
         this.password = password;
         this.displayName = displayName;
+        this.image = image;
         
         netMan.connect();
         
