@@ -1,8 +1,6 @@
 package tictactoe.gui;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 import javafx.animation.KeyFrame;
@@ -12,8 +10,8 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -22,14 +20,17 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -38,6 +39,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -52,26 +55,24 @@ public class Game extends Application {
 	Button chatSend = new Button("Send");
 	TextArea chatText = new TextArea();
 	ListView chatList = new ListView();
-	private Player player=new Player();
+	private Player player;
 	private SessionManager sMan = SessionManager.getInstance();
 	private GameManager gMan = GameManager.getInstance();
 	private boolean playable = true;
 	private boolean yourTurn = false;
 	private String playerSymbol;
 	private String opponentSymbol;
-	private Color opponentColor = Color.BLUE;
-	private Color playerColor = Color.RED;
+	private Color opponentColor = Color.rgb(41, 128, 185);
+	private Color playerColor = Color.rgb(192, 57, 43);
 	private int response;
 	private Tile[][] board = new Tile[3][3];
 	private List<Combo> combos = new ArrayList<>();
-
-	public Player getPlayer() {
-		return player;
-	}
-
-	public void setPlayer(Player player) {
-		this.player = player;
-	}
+	Scene login;
+	Scene game;
+	Stage thestage;
+	String user;
+	String pw;
+	Label lblMessage = new Label();
 
 	private SessionManager.GameControlListener gameControlListener = new SessionManager.GameControlListener() {
 		@Override
@@ -126,46 +127,28 @@ public class Game extends Application {
 
 		}
 
-		private void genrateListView(List<Player> players) {
-			ObservableList<Player> playerslist = FXCollections.observableArrayList(players);
-			playerslist.forEach(p -> {
-				listView.getItems().add(p);
+	};
+
+	private SessionManager.AuthListener authListener = new SessionManager.AuthListener() {
+		@Override
+		public void onSuccess(Player p) {
+			Platform.runLater(() -> {
+				player = p;
+				game = createGameRoot();
+				thestage.setScene(game);
+				sMan.sendListPlayers();
 			});
-			listView.setCellFactory(parm -> new ListCell<Player>() {
-				private final ImageView imageView = new ImageView();
+		}
 
-				@Override
-				public void updateItem(Player player, boolean empty) {
-					super.updateItem(player, empty);
-					if (empty) {
-						setText(null);
-						setGraphic(null);
-					} else {
-						HBox hBox = new HBox();
-						hBox.setSpacing(3);
-						Text name = new Text(player.getDisplayName());
-
-						ImageView statusImageView = new ImageView();
-						Image statusImage = new Image(getClass().getClassLoader().getResource("images/" + player.getStatus() + ".png").toString(), 16, 16, true, true);
-						statusImageView.setImage(statusImage);
-
-						ImageView pictureImageView = new ImageView();
-						Image image = new Image(getClass().getClassLoader().getResource("images/avatars/" + player.getImage()).toString(), 50, 50, true, true);
-						pictureImageView.setImage(image);
-
-						hBox.getChildren().addAll(pictureImageView, statusImageView, name);
-						hBox.setAlignment(Pos.CENTER_LEFT);
-
-						setGraphic(hBox);
-
-					}
-				}
+		@Override
+		public void onFailure() {
+			Platform.runLater(() -> {
+				lblMessage.setText("this user is not in database");
 			});
+			
 		}
 	};
 
-	private Pane boardPane = new Pane();
-	BorderPane root = new BorderPane();
 	private GameManager.GameListener gameListener = new GameManager.GameListener() {
 		@Override
 		public void onGameMove(int x, int y) {
@@ -181,17 +164,125 @@ public class Game extends Application {
 
 		@Override
 		public void onGameChatTextMessage(Player sender, String content) {
-			System.out.println(sender.getDisplayName());
-			chatList.getItems().add(sender.getDisplayName()+"  "+content);
-		}
 
+			HBox hBox = new HBox();
+			VBox vBox = new VBox();
+			hBox.setSpacing(3);
+			vBox.setSpacing(3);
+			Text name = new Text(sender.getDisplayName());
+			Text messeget = new Text(content);
+			messeget.setFont(Font.font(messeget.getFont().toString(), FontWeight.LIGHT, FontPosture.ITALIC, 14));
+			ImageView pictureImageView = new ImageView();
+			Image image = new Image(getClass().getClassLoader().getResource("images/avatars/" + sender.getImage()).toString(), 20, 20, true, true);
+			pictureImageView.setImage(image);
+
+			hBox.getChildren().addAll(pictureImageView, name);
+			hBox.setAlignment(Pos.CENTER_LEFT);
+			vBox.setStyle("-fx-background-color:rgba(52, 152, 219,1.0);-fx-padding:5px;-fx-border-radius:10");
+			vBox.getChildren().addAll(hBox, messeget);
+			chatList.getItems().add(vBox);
+
+		}
 	};
 
 	public void setgMan(GameManager gMan) {
 		this.gMan = gMan;
 	}
 
-	private Parent createContent() {
+	private void genrateListView(List<Player> players) {
+		ObservableList<Player> playerslist = FXCollections.observableArrayList(players);
+		playerslist.forEach(p -> {
+			listView.getItems().add(p);
+		});
+		listView.setCellFactory(parm -> new ListCell<Player>() {
+			private final ImageView imageView = new ImageView();
+
+			@Override
+			public void updateItem(Player player, boolean empty) {
+				super.updateItem(player, empty);
+				if (empty) {
+					setText(null);
+					setGraphic(null);
+				} else {
+					HBox hBox = new HBox();
+					hBox.setSpacing(3);
+					Text name = new Text(player.getDisplayName());
+
+					ImageView statusImageView = new ImageView();
+					Image statusImage = new Image(getClass().getClassLoader().getResource("images/" + player.getStatus() + ".png").toString(), 16, 16, true, true);
+					statusImageView.setImage(statusImage);
+
+					ImageView pictureImageView = new ImageView();
+					Image image = new Image(getClass().getClassLoader().getResource("images/avatars/" + player.getImage()).toString(), 50, 50, true, true);
+					pictureImageView.setImage(image);
+
+					hBox.getChildren().addAll(pictureImageView, statusImageView, name);
+					hBox.setAlignment(Pos.CENTER_LEFT);
+
+					setGraphic(hBox);
+
+				}
+			}
+		});
+	}
+
+	private Scene createLoginRoot() {
+
+		BorderPane bp = new BorderPane();
+		bp.setPadding(new Insets(10, 50, 50, 50));
+
+		//Adding GridPane
+		GridPane gridPane = new GridPane();
+		gridPane.setPadding(new Insets(20, 20, 20, 20));
+		gridPane.setHgap(5);
+		gridPane.setVgap(5);
+
+		//Implementing Nodes for GridPane
+		Label lblUserName = new Label("Username");
+		TextField txtUserName = new TextField();
+		Label lblPassword = new Label("Password");
+		PasswordField pf = new PasswordField();
+		Button btnLogin = new Button("Login");
+		btnLogin.setMaxWidth(Double.MAX_VALUE);
+		Button btnSignUp = new Button("Sign Up");
+		btnSignUp.setMaxWidth(Double.MAX_VALUE);
+		
+
+		//Adding Nodes to GridPane layout
+		gridPane.add(lblUserName, 0, 0);
+		gridPane.add(txtUserName, 1, 0);
+		gridPane.add(lblPassword, 0, 1);
+		gridPane.add(pf, 1, 1);
+		gridPane.add(btnLogin, 0, 2, 2, 2);
+		gridPane.add(btnSignUp, 0, 4, 2, 2);
+		gridPane.add(lblMessage, 0, 6,2,2);
+
+		btnLogin.setOnAction(e -> {
+			if(txtUserName.getText().equals("")){
+				lblMessage.setText("Please enter your Name");
+				return;
+			}else if(pf.getText().equals("")){
+				lblMessage.setText("Please enter your Password");
+				return;
+			}else{
+				user = txtUserName.getText();
+				pw = pf.getText();
+				sMan.login(user, pw);
+			}
+			
+
+		});
+		gridPane.setAlignment(Pos.CENTER);
+		bp.setCenter(gridPane);
+		return new Scene(bp, 650, 650);
+
+	}
+	Pane boardPane = new Pane();
+
+	private Scene createGameRoot() {
+
+		BorderPane root = new BorderPane();
+
 		boardPane.setPrefSize(450, 450);
 		root.setPrefSize(650, 650);
 
@@ -248,7 +339,25 @@ public class Game extends Application {
 		chatScroll.setContent(chatList);
 		chatList.setPrefSize(600, 150);
 		chatVbox.getChildren().addAll(boardPane, chatScroll, chatHbox);
+		chatSend.setOnAction(e -> {
+			sMan.sendChatMessage(player, chatText.getText());
+			HBox hBox = new HBox();
+			VBox vBox = new VBox();
+			hBox.setSpacing(3);
+			vBox.setSpacing(3);
+			Text name = new Text("Me");
+			Text messeget = new Text(chatText.getText());
+			messeget.setFont(Font.font(messeget.getFont().toString(), FontWeight.LIGHT, FontPosture.ITALIC, 14));
+			ImageView pictureImageView = new ImageView();
+			Image image = new Image(getClass().getClassLoader().getResource("images/avatars/" + player.getImage()).toString(), 20, 20, true, true);
+			pictureImageView.setImage(image);
 
+			hBox.getChildren().addAll(pictureImageView, name);
+			hBox.setAlignment(Pos.CENTER_LEFT);
+			vBox.setStyle("-fx-background-color:rgba(231, 76, 60,1.0);-fx-padding:5px;-fx-border-radius:10");
+			vBox.getChildren().addAll(hBox, messeget);
+			chatList.getItems().add(vBox);
+		});
 		Menu gamem = new Menu("_Game");
 		gamem.setMnemonicParsing(true);
 		MenuItem newItem = new MenuItem("New");
@@ -271,22 +380,22 @@ public class Game extends Application {
 		root.setTop(bar);
 		root.setCenter(chatVbox);
 		root.setRight(listView);
-		return root;
+		return new Scene(root, 650, 650);
 	}
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
-
+		thestage = primaryStage;
+		sMan.setAuthListener(authListener);
 		gMan.setGameListener(gameListener);
 		sMan.setGameControlListener(gameControlListener);
-		sMan.sendListPlayers();
-		chatSend.setOnAction(e->{
-			sMan.sendChatMessage(player,chatText.getText());
-		});
+
+		login = createLoginRoot();
 		primaryStage.setResizable(false);
-		primaryStage.setScene(new Scene(createContent()));
+		primaryStage.setScene(login);
 		primaryStage.show();
 	}
+
 	private void checkState() {
 		for (Combo combo : combos) {
 			if (combo.isComplete()) {
@@ -368,6 +477,7 @@ public class Game extends Application {
 			getChildren().addAll(border, text);
 
 			setOnMouseClicked(event -> {
+
 				if (!playable) {
 					return;
 				}
@@ -411,5 +521,12 @@ public class Game extends Application {
 	public static void main(String[] args) {
 		launch(args);
 
+	}
+
+	public void stop() throws Exception {
+
+		sMan.stop();
+
+		super.stop(); //To change body of generated methods, choose Tools | Templates.
 	}
 }
