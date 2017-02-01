@@ -89,7 +89,7 @@ public class GameManager implements SessionManager.GameMessageListener{
     
      @Override
     public void onGameChatTextMessage(Player sender, String content) {
-        
+         onGameChatTextMessageCallback(sender, content);
     }
     
 }

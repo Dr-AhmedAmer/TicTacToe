@@ -20,7 +20,8 @@ import tictactoe.client.network.SessionManager;
 import tictactoe.models.Player;
 
 public class Login extends Application {
-
+    
+        private Player p;
 	private Stage sta;
 	private SessionManager.AuthListener authListener = new SessionManager.AuthListener() {
 		@Override
@@ -30,6 +31,7 @@ public class Login extends Application {
 					@Override
 					public void run() {
 						Game g = new Game();
+                                                g.setPlayer(p);
 						try {
 							g.start(sta);
 						} catch (Exception ex) {

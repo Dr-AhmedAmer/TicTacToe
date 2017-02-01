@@ -46,7 +46,8 @@ import tictactoe.client.network.SessionManager;
 import tictactoe.models.Player;
 
 public class Game extends Application {
-
+        
+        private Player p;
 	ListView<Player> listView = new ListView<>();
 	private SessionManager sMan = SessionManager.getInstance();
 	private GameManager gMan = GameManager.getInstance();
@@ -56,9 +57,12 @@ public class Game extends Application {
 	private String opponentSymbol;
 	private Color opponentColor=Color.BLUE;
 	private Color playerColor=Color.RED;
-    private int response;
+        private int response;
 	private Tile[][] board = new Tile[3][3];
 	private List<Combo> combos = new ArrayList<>();
+        public void setPlayer(Player p){
+            this.p = p;
+        }
 	private SessionManager.GameControlListener gameControlListener = new SessionManager.GameControlListener() {
 		@Override
 		public void onGameRequest(int senderId) {
@@ -159,7 +163,7 @@ public class Game extends Application {
 
             @Override
             public void onGameChatTextMessage(Player sender, String content) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                System.out.println(sender.getId()+" "+sender.getDisplayName()+""+content);
             }
 	};
 
@@ -252,6 +256,7 @@ public class Game extends Application {
 		gMan.setGameListener(gameListener);
 		sMan.setGameControlListener(gameControlListener);
 		sMan.sendListPlayers();
+                sMan.sendChatMessage(p, "heeeeey");
 		primaryStage.setResizable(false);
 		primaryStage.setScene(new Scene(createContent()));
 		primaryStage.show();
@@ -338,7 +343,10 @@ public class Game extends Application {
 			getChildren().addAll(border, text);
 
 			setOnMouseClicked(event -> {
-				if (!playable) {
+				
+                                sMan.sendChatMessage(p, "heeeeey");
+                            
+                                if (!playable) {
 					return;
 				}
 
