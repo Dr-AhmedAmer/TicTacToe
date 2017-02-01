@@ -48,6 +48,11 @@ import tictactoe.models.Player;
 public class Game extends Application {
 
 	ListView<Player> listView = new ListView<>();
+	Button chatEmojBtn = new Button("emoj");
+	Button chatSend = new Button("Send");
+	TextArea chatText = new TextArea();
+	ListView chatList = new ListView();
+	private Player player=new Player();
 	private SessionManager sMan = SessionManager.getInstance();
 	private GameManager gMan = GameManager.getInstance();
 	private boolean playable = true;
@@ -60,7 +65,14 @@ public class Game extends Application {
 	private Tile[][] board = new Tile[3][3];
 	private List<Combo> combos = new ArrayList<>();
 
-	private Thread refreshThread;
+	public Player getPlayer() {
+		return player;
+	}
+
+	public void setPlayer(Player player) {
+		this.player = player;
+	}
+
 	private SessionManager.GameControlListener gameControlListener = new SessionManager.GameControlListener() {
 		@Override
 		public void onGameRequest(int senderId) {
@@ -169,9 +181,15 @@ public class Game extends Application {
 
 		@Override
 		public void onGameChatTextMessage(Player sender, String content) {
-			throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+			System.out.println(sender.getDisplayName());
+			chatList.getItems().add(sender.getDisplayName()+"  "+content);
 		}
+
 	};
+
+	public void setgMan(GameManager gMan) {
+		this.gMan = gMan;
+	}
 
 	private Parent createContent() {
 		boardPane.setPrefSize(450, 450);
@@ -210,12 +228,12 @@ public class Game extends Application {
 		VBox chatVbox = new VBox();
 		HBox chatHbox = new HBox();
 		chatHbox.setPrefSize(450, 30);
-		TextArea chatText = new TextArea();
+
 		chatText.setPrefSize(350, 30);
-		Button chatSend = new Button("Send");
+
 		chatSend.setPrefWidth(70);
 		chatSend.setPrefHeight(Double.MAX_VALUE);
-		Button chatEmojBtn = new Button("emoj");
+
 		chatEmojBtn.setPrefWidth(30);
 		chatEmojBtn.setPrefHeight(Double.MAX_VALUE);
 
@@ -226,29 +244,29 @@ public class Game extends Application {
 		ScrollPane chatScroll = new ScrollPane();
 		chatScroll.setPrefSize(600, 150);
 		chatScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-		ListView chatList = new ListView();
+
 		chatScroll.setContent(chatList);
 		chatList.setPrefSize(600, 150);
 		chatVbox.getChildren().addAll(boardPane, chatScroll, chatHbox);
 
-		Menu game = new Menu("_Game");
-		game.setMnemonicParsing(true);
+		Menu gamem = new Menu("_Game");
+		gamem.setMnemonicParsing(true);
 		MenuItem newItem = new MenuItem("New");
 		MenuItem openItem = new MenuItem("Open");
 		MenuItem saveItem = new MenuItem("Save");
 		MenuItem exitItem = new MenuItem("Exit");
-		game.getItems().addAll(newItem, openItem, saveItem, new SeparatorMenuItem(), exitItem);
+		gamem.getItems().addAll(newItem, openItem, saveItem, new SeparatorMenuItem(), exitItem);
 
-		Menu player = new Menu("_Player");
-		game.setMnemonicParsing(true);
+		Menu playerm = new Menu("_Player");
+		gamem.setMnemonicParsing(true);
 		MenuItem registerItem = new MenuItem("Register");
 		MenuItem signItem = new MenuItem("Signin");
 		MenuItem listItem = new MenuItem("List");
 		MenuItem chatItem = new MenuItem("Chat");
-		player.getItems().addAll(registerItem, signItem, listItem, chatItem);
+		playerm.getItems().addAll(registerItem, signItem, listItem, chatItem);
 
 		MenuBar bar = new MenuBar();
-		bar.getMenus().addAll(game, player);
+		bar.getMenus().addAll(gamem, playerm);
 		bar.setPrefHeight(20);
 		root.setTop(bar);
 		root.setCenter(chatVbox);
@@ -258,15 +276,17 @@ public class Game extends Application {
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
-		
+
 		gMan.setGameListener(gameListener);
 		sMan.setGameControlListener(gameControlListener);
 		sMan.sendListPlayers();
+		chatSend.setOnAction(e->{
+			sMan.sendChatMessage(player,chatText.getText());
+		});
 		primaryStage.setResizable(false);
 		primaryStage.setScene(new Scene(createContent()));
 		primaryStage.show();
 	}
-
 	private void checkState() {
 		for (Combo combo : combos) {
 			if (combo.isComplete()) {
@@ -392,5 +412,4 @@ public class Game extends Application {
 		launch(args);
 
 	}
-
 }

@@ -32,6 +32,7 @@ public class Login extends Application {
 						Game g = new Game();
 						try {
 							g.start(sta);
+							g.setPlayer(p);
 						} catch (Exception ex) {
 							Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex);
 						}
@@ -101,6 +102,7 @@ public class Login extends Application {
 			user = txtUserName.getText();
 			pw = pf.getText();
 			sMan.login(user, pw);
+			
 		});
                 
 		bp.setTop(hb);
