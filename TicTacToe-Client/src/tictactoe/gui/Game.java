@@ -54,91 +54,101 @@ public class Game extends Application {
 	private boolean yourTurn = false;
 	private String playerSymbol;
 	private String opponentSymbol;
-	private Color opponentColor=Color.BLUE;
-	private Color playerColor=Color.RED;
-    private int response;
+	private Color opponentColor = Color.BLUE;
+	private Color playerColor = Color.RED;
+	private int response;
 	private Tile[][] board = new Tile[3][3];
 	private List<Combo> combos = new ArrayList<>();
+
+	private Thread refreshThread;
 	private SessionManager.GameControlListener gameControlListener = new SessionManager.GameControlListener() {
 		@Override
 		public void onGameRequest(int senderId) {
-                    System.out.println("request from" +senderId);
-                    System.out.println("enter response");
-                    Scanner sc = new Scanner(System.in);
-                    response=sc.nextInt();
-                    sMan.sendResponse(senderId, response);
+			System.out.println("request from" + senderId);
+			System.out.println("enter response");
+			Scanner sc = new Scanner(System.in);
+			response = sc.nextInt();
+			sMan.sendResponse(senderId, response);
 
 		}
 
 		@Override
-		public void onGameResponse(int senderId, int response ,String symbol) {
-                    
-                    if(response == 0){
-                        System.out.println("player accepted");
-						gMan.startGame();
-						if(symbol.equals("X")){
-							yourTurn=true;
-							opponentSymbol="O";
-						}else{
-							opponentSymbol="X";
-						}
-                        playerSymbol=symbol;
-						
-                    }else{
-                        System.out.println("player declined");
-                    }
-                    
+		public void onGameResponse(int senderId, int response, String symbol) {
+
+			if (response == 0) {
+				System.out.println("player accepted");
+				gMan.startGame();
+				if (symbol.equals("X")) {
+					yourTurn = true;
+					opponentSymbol = "O";
+				} else {
+					opponentSymbol = "X";
+				}
+				playerSymbol = symbol;
+
+			} else {
+				System.out.println("player declined");
+			}
+
 		}
 
 		@Override
 		public void onPlayerList(List<Player> players) {
-			if (players == null) {
-				System.out.println("Empty");
-			} else {
-				ObservableList<Player> playerslist = FXCollections.observableArrayList(players);
-				playerslist.forEach(p -> {
-					listView.getItems().add(p);
-				});
-				listView.setOnMouseClicked((MouseEvent event) -> {
+			Platform.runLater(() -> {
+
+				if (players == null) {
+					System.out.println("Empty");
+				} else {
+					genrateListView(players);
+					listView.setOnMouseClicked((MouseEvent event) -> {
 						if (event.getButton().equals(MouseButton.PRIMARY)) {
 							if (event.getClickCount() == 2) {
 								sMan.sendInvite(listView.getSelectionModel().getSelectedItem().getId());
 							}
 						}
 					});
+//				sMan.sendListPlayers();
+				}
 
-				listView.setCellFactory(parm -> new ListCell<Player>() {
-            private final ImageView imageView = new ImageView();
+			});
 
-           @Override
-            public void updateItem(Player player, boolean empty) {
-                super.updateItem(player, empty);
-                if (empty) {
-                    setText(null);
-                    setGraphic(null);
-                } else {
-                    HBox hBox = new HBox();
-                    Text name = new Text(player.getDisplayName());
-					
-                    ImageView statusImageView = new ImageView();
-                    Image statusImage = new Image(getClass().getClassLoader().getResource("images/" + player.getStatus()+ ".png").toString(), 16, 16,true,true);
-                    statusImageView.setImage(statusImage);
+		}
 
-                    ImageView pictureImageView = new ImageView();
-                    Image image = new Image(getClass().getClassLoader().getResource("images/" + player.getStatus()+ ".png").toString(),50,50,true,true);
-                    pictureImageView.setImage(image);
+		private void genrateListView(List<Player> players) {
+			ObservableList<Player> playerslist = FXCollections.observableArrayList(players);
+			playerslist.forEach(p -> {
+				listView.getItems().add(p);
+			});
+			listView.setCellFactory(parm -> new ListCell<Player>() {
+				private final ImageView imageView = new ImageView();
 
-                    hBox.getChildren().addAll(statusImageView, pictureImageView, name);
-                    hBox.setAlignment(Pos.CENTER_LEFT);
+				@Override
+				public void updateItem(Player player, boolean empty) {
+					super.updateItem(player, empty);
+					if (empty) {
+						setText(null);
+						setGraphic(null);
+					} else {
+						HBox hBox = new HBox();
+						hBox.setSpacing(3);
+						Text name = new Text(player.getDisplayName());
 
-                    setGraphic(hBox);
-                   
-                }
-            }
-        });
+						ImageView statusImageView = new ImageView();
+						Image statusImage = new Image(getClass().getClassLoader().getResource("images/" + player.getStatus() + ".png").toString(), 16, 16, true, true);
+						statusImageView.setImage(statusImage);
 
-			}
+						ImageView pictureImageView = new ImageView();
+						Image image = new Image(getClass().getClassLoader().getResource("images/avatars/" + player.getImage()).toString(), 50, 50, true, true);
+						pictureImageView.setImage(image);
 
+						hBox.getChildren().addAll(pictureImageView, statusImageView, name);
+						hBox.setAlignment(Pos.CENTER_LEFT);
+
+						setGraphic(hBox);
+
+					}
+				}
+			});
 		}
 	};
 
@@ -149,7 +159,7 @@ public class Game extends Application {
 		public void onGameMove(int x, int y) {
 			board[x][y].drawMove(opponentSymbol);
 			checkState();
-			yourTurn=true;
+			yourTurn = true;
 		}
 
 		@Override
@@ -157,10 +167,10 @@ public class Game extends Application {
 			System.out.println(winner);
 		}
 
-            @Override
-            public void onGameChatTextMessage(Player sender, String content) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+		@Override
+		public void onGameChatTextMessage(Player sender, String content) {
+			throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		}
 	};
 
 	private Parent createContent() {
@@ -174,7 +184,7 @@ public class Game extends Application {
 				tile.setTranslateY(i * 150);
 				tile.setX(j);
 				tile.setY(i);
-				
+
 				boardPane.getChildren().add(tile);
 				board[j][i] = tile;
 			}
@@ -193,53 +203,52 @@ public class Game extends Application {
 		// diagonals
 		combos.add(new Combo(board[0][0], board[1][1], board[2][2]));
 		combos.add(new Combo(board[2][0], board[1][1], board[0][2]));
-		
+
 		listView.setPrefWidth(200);
 		boardPane.getChildren().add(listView);
-		
-		VBox chatVbox =new VBox();
-		HBox chatHbox =new HBox();
-		chatHbox.setPrefSize(450,30);
-		TextArea chatText=new TextArea();
+
+		VBox chatVbox = new VBox();
+		HBox chatHbox = new HBox();
+		chatHbox.setPrefSize(450, 30);
+		TextArea chatText = new TextArea();
 		chatText.setPrefSize(350, 30);
-		Button chatSend =new Button("Send");
+		Button chatSend = new Button("Send");
 		chatSend.setPrefWidth(70);
 		chatSend.setPrefHeight(Double.MAX_VALUE);
-		Button chatEmojBtn=new Button("emoj");
+		Button chatEmojBtn = new Button("emoj");
 		chatEmojBtn.setPrefWidth(30);
 		chatEmojBtn.setPrefHeight(Double.MAX_VALUE);
-		
-		ImageView chatEmoj=new ImageView();
-		
+
+		ImageView chatEmoj = new ImageView();
+
 		chatEmojBtn.setGraphic(chatEmoj);
-		chatHbox.getChildren().addAll(chatText,chatSend,chatEmojBtn);
-		ScrollPane chatScroll =new ScrollPane();
+		chatHbox.getChildren().addAll(chatText, chatSend, chatEmojBtn);
+		ScrollPane chatScroll = new ScrollPane();
 		chatScroll.setPrefSize(600, 150);
 		chatScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-		ListView chatList =new ListView();
+		ListView chatList = new ListView();
 		chatScroll.setContent(chatList);
-		chatList.setPrefSize(600,150);
-		chatVbox.getChildren().addAll(boardPane,chatScroll,chatHbox);
-		
-		
+		chatList.setPrefSize(600, 150);
+		chatVbox.getChildren().addAll(boardPane, chatScroll, chatHbox);
+
 		Menu game = new Menu("_Game");
-        game.setMnemonicParsing(true); 
-        MenuItem newItem = new MenuItem("New");
-        MenuItem openItem = new MenuItem("Open");
+		game.setMnemonicParsing(true);
+		MenuItem newItem = new MenuItem("New");
+		MenuItem openItem = new MenuItem("Open");
 		MenuItem saveItem = new MenuItem("Save");
-        MenuItem exitItem = new MenuItem("Exit");
-        game.getItems().addAll(newItem, openItem, saveItem, new SeparatorMenuItem(), exitItem);
-	
+		MenuItem exitItem = new MenuItem("Exit");
+		game.getItems().addAll(newItem, openItem, saveItem, new SeparatorMenuItem(), exitItem);
+
 		Menu player = new Menu("_Player");
-        game.setMnemonicParsing(true); 
-        MenuItem registerItem = new MenuItem("Register");
-        MenuItem signItem = new MenuItem("Signin");
+		game.setMnemonicParsing(true);
+		MenuItem registerItem = new MenuItem("Register");
+		MenuItem signItem = new MenuItem("Signin");
 		MenuItem listItem = new MenuItem("List");
-        MenuItem chatItem = new MenuItem("Chat");
-        player.getItems().addAll(registerItem,signItem,listItem,chatItem);
-	
-		MenuBar bar=new MenuBar();
-		bar.getMenus().addAll(game,player);
+		MenuItem chatItem = new MenuItem("Chat");
+		player.getItems().addAll(registerItem, signItem, listItem, chatItem);
+
+		MenuBar bar = new MenuBar();
+		bar.getMenus().addAll(game, player);
 		bar.setPrefHeight(20);
 		root.setTop(bar);
 		root.setCenter(chatVbox);
@@ -249,6 +258,7 @@ public class Game extends Application {
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
+		
 		gMan.setGameListener(gameListener);
 		sMan.setGameControlListener(gameControlListener);
 		sMan.sendListPlayers();
@@ -281,11 +291,11 @@ public class Game extends Application {
 
 			Timeline timeline = new Timeline();
 			timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(1),
-				new KeyValue(line.endXProperty(), combo.tiles[2].getCenterX()),
-				new KeyValue(line.endYProperty(), combo.tiles[2].getCenterY())));
+					new KeyValue(line.endXProperty(), combo.tiles[2].getCenterX()),
+					new KeyValue(line.endYProperty(), combo.tiles[2].getCenterY())));
 			timeline.play();
 		});
-		
+
 	}
 
 	private class Combo {
@@ -301,7 +311,7 @@ public class Game extends Application {
 				return false;
 			}
 			return tiles[0].getValue().equals(tiles[1].getValue())
-				&& tiles[0].getValue().equals(tiles[2].getValue());
+					&& tiles[0].getValue().equals(tiles[2].getValue());
 		}
 	}
 
@@ -343,12 +353,12 @@ public class Game extends Application {
 				}
 
 				if (event.getButton() == MouseButton.PRIMARY) {
-					if(yourTurn){
+					if (yourTurn) {
 						drawMove(playerSymbol);
 						checkState();
 						gMan.move(this.x, this.y);
 						yourTurn = false;
-					}else{
+					} else {
 						return;
 					}
 				}
@@ -368,13 +378,13 @@ public class Game extends Application {
 		}
 
 		private void drawMove(String turn) {
-                    if (turn.equals("X")) {
-						text.setFill(playerColor);
-                        text.setText("X");
-                    }else{
-						text.setFill(opponentColor);
-                        text.setText("O");
-                    }
+			if (turn.equals("X")) {
+				text.setFill(playerColor);
+				text.setText("X");
+			} else {
+				text.setFill(opponentColor);
+				text.setText("O");
+			}
 		}
 	}
 
