@@ -143,6 +143,19 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
         
     }
     
+    public void sendChatMessage(Player sender,String content){
+        
+        GameChatTextMessage msg = new GameChatTextMessage();
+        msg.setSender(sender);
+        msg.setContent(content);
+        try {
+            netMan.send(MessageTypes.MSG_TYPE_CHAT_TEXT, objectMapper.writeValueAsString(msg));
+        } catch (IOException ex) {
+            Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }
+    
      public void register(String email, String password,String displayName,String image){
         
          if(isRegistering)
