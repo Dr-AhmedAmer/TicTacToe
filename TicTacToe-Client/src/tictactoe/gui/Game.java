@@ -268,6 +268,7 @@ public class Game extends Application {
 				user = txtUserName.getText();
 				pw = pf.getText();
 				sMan.login(user, pw);
+//				System.out.println("press");
 			}
 			
 

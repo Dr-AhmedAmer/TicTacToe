@@ -138,7 +138,7 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
         
         this.username = username;
         this.password = password;
-        
+        System.out.println("login");
         netMan.connect();
         
     }
