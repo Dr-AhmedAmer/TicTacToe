@@ -113,8 +113,6 @@ public class NetworkManager implements Runnable{
         this.th = new Thread(this);
         this.th.start();
         
-        this.sendThread = new Thread(this.sendRunnable);
-        this.sendThread.start();
     }
     
     public void stop(){
@@ -131,15 +129,16 @@ public class NetworkManager implements Runnable{
     }
     
     public void send(String type, String msg){
-        
-        if(this.isConnected){
-            
-            type ="type=" + type + "\n";
-            this.sendQueue.add(type);
+           
+        type ="type=" + type + "\n";
+        this.sendQueue.add(type);
 
-            msg+="\n";
-            this.sendQueue.add(msg);
-            
+        msg+="\n";
+        this.sendQueue.add(msg);
+        
+        
+        if(!this.isConnected){
+            connect();
         }
         
     }
@@ -368,6 +367,10 @@ public class NetworkManager implements Runnable{
             this.isConnected = true;
 
             this.client = new Client(sock);
+            
+            
+            this.sendThread = new Thread(this.sendRunnable);
+            this.sendThread.start();
             
             onConnected();
 

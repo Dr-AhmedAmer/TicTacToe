@@ -51,8 +51,8 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
     private GameMessageListener gameListener;
     private GameControlListener gameControlListener;
     
-    private boolean isLogging = false;
-    private boolean isRegistering = false;
+//    private boolean isLogging = false;
+//    private boolean isRegistering = false;
     
     private String username;
     private String password;
@@ -130,16 +130,15 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
     }
     
     public void login(String username, String password){
-        
-        if(isLogging)
-            return;
-        
-        isLogging = true;
-        
-        this.username = username;
-        this.password = password;
-        System.out.println("login");
-        netMan.connect();
+        AuthMessage msg = new AuthMessage();
+        msg.setUserName(username);
+        msg.setPassword(password);
+
+        try {
+            netMan.send(MessageTypes.MSG_TYPE_AUTH, objectMapper.writeValueAsString(msg));
+        } catch (IOException ex) {
+            Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
     }
     
@@ -158,17 +157,18 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
     
      public void register(String email, String password,String displayName,String image){
         
-         if(isRegistering)
-            return;
-        
-        isRegistering = true;
-         
-        this.username = username;
-        this.password = password;
-        this.displayName = displayName;
-        this.image = image;
-        
-        netMan.connect();
+        RegisterMessage msg = new RegisterMessage();
+        msg.setEmail(email);
+        msg.setPassword(password);
+        msg.setDisplayName(displayName);
+
+        try {
+			System.out.println("sMan register");
+			System.out.println(email+""+password+""+displayName+""+image);
+            netMan.send(MessageTypes.MSG_TYPE_REG, objectMapper.writeValueAsString(msg));
+        } catch (IOException ex) {
+            Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
     }
      
@@ -181,8 +181,6 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
     }
 
     private void onAuthSuccess(Player p){
-        isLogging = false;
-        isRegistering = false;
         
         if(authListner != null){
             authListner.onSuccess(p);
@@ -191,9 +189,6 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
     }
     
     private void onAuthFailure(){
-        
-        isLogging = false;
-        isRegistering = false;
         
         if(authListner != null){
             authListner.onFailure();
@@ -266,28 +261,6 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
     
     @Override
     public void onConnected() {
-        if(isLogging){
-            AuthMessage msg = new AuthMessage();
-            msg.setUserName(this.username);
-            msg.setPassword(this.password);
-
-            try {
-                netMan.send(MessageTypes.MSG_TYPE_AUTH, objectMapper.writeValueAsString(msg));
-            } catch (IOException ex) {
-                Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }else if (isRegistering){
-            RegisterMessage msg = new RegisterMessage();
-            msg.setEmail(this.username);
-            msg.setPassword(this.password);
-            msg.setDisplayName(this.displayName);
-
-            try {
-                netMan.send(MessageTypes.MSG_TYPE_REG, objectMapper.writeValueAsString(msg));
-            } catch (IOException ex) {
-                Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
         
     }
 
