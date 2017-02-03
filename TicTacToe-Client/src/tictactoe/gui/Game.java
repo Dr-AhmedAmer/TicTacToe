@@ -11,9 +11,12 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -21,10 +24,12 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
@@ -68,6 +73,7 @@ public class Game extends Application {
 	private Tile[][] board = new Tile[3][3];
 	private List<Combo> combos = new ArrayList<>();
 	Scene login;
+	Scene signup;
 	Scene game;
 	Stage thestage;
 	String user;
@@ -133,10 +139,10 @@ public class Game extends Application {
 		@Override
 		public void onSuccess(Player p) {
 			Platform.runLater(() -> {
+				System.out.println("onSucess");
 				player = p;
 				game = createGameRoot();
 				thestage.setScene(game);
-				sMan.sendListPlayers();
 			});
 		}
 
@@ -145,7 +151,7 @@ public class Game extends Application {
 			Platform.runLater(() -> {
 				lblMessage.setText("this user is not in database");
 			});
-			
+
 		}
 	};
 
@@ -238,45 +244,130 @@ public class Game extends Application {
 		gridPane.setVgap(5);
 
 		//Implementing Nodes for GridPane
-		Label lblUserName = new Label("Username");
-		TextField txtUserName = new TextField();
+		Label lblEmail = new Label("Email");
+		TextField txtEmail = new TextField();
 		Label lblPassword = new Label("Password");
 		PasswordField pf = new PasswordField();
 		Button btnLogin = new Button("Login");
 		btnLogin.setMaxWidth(Double.MAX_VALUE);
 		Button btnSignUp = new Button("Sign Up");
 		btnSignUp.setMaxWidth(Double.MAX_VALUE);
-		
 
 		//Adding Nodes to GridPane layout
-		gridPane.add(lblUserName, 0, 0);
-		gridPane.add(txtUserName, 1, 0);
+		gridPane.add(lblEmail, 0, 0);
+		gridPane.add(txtEmail, 1, 0);
 		gridPane.add(lblPassword, 0, 1);
 		gridPane.add(pf, 1, 1);
 		gridPane.add(btnLogin, 0, 2, 2, 2);
 		gridPane.add(btnSignUp, 0, 4, 2, 2);
-		gridPane.add(lblMessage, 0, 6,2,2);
-
-		btnLogin.setOnAction(e -> {
-			if(txtUserName.getText().equals("")){
-				lblMessage.setText("Please enter your Name");
-				return;
-			}else if(pf.getText().equals("")){
-				lblMessage.setText("Please enter your Password");
-				return;
-			}else{
-				user = txtUserName.getText();
-				pw = pf.getText();
-				sMan.login(user, pw);
+		gridPane.add(lblMessage, 0, 6, 2, 2);
+		txtEmail.focusedProperty().addListener((arg0, oldValue, newValue) -> {
+			if (!newValue) {
+				if (!txtEmail.getText().matches("[A-Za-z0-9._%-]+\\@[A-Za-z]+\\.[A-Za-z]+.")) {
+					lblMessage.setText("invalid Email");
+					txtEmail.setText("");
+				}
 			}
-			
 
+		});
+		btnLogin.setOnAction(e -> {
+			user = txtEmail.getText();
+			pw = pf.getText();
+			sMan.login(user, pw);
+		});
+		btnSignUp.setOnAction((event) -> {
+			signup=createSignUPRoot();
+			thestage.setScene(signup);
 		});
 		gridPane.setAlignment(Pos.CENTER);
 		bp.setCenter(gridPane);
 		return new Scene(bp, 650, 650);
 
 	}
+	String avatar;
+	private Scene createSignUPRoot() {
+		String avatars[] = {"man1.png", "man2.png", "man3.png", "man4.png", "girl1.png", "girl2.png", "girl3.png", "girl4.png"};
+		BorderPane bp = new BorderPane();
+		bp.setPadding(new Insets(10, 50, 50, 50));
+
+		//Adding GridPane
+		GridPane gridPane = new GridPane();
+		gridPane.setPadding(new Insets(20, 20, 20, 20));
+		gridPane.setHgap(5);
+		gridPane.setVgap(5);
+
+		//Implementing Nodes for GridPane
+		Label lblUserName = new Label("Username");
+		TextField txtUserName = new TextField();
+		Label lblEmail = new Label("Email");
+		TextField txtEmail = new TextField();
+
+		Label lblPassword = new Label("Password");
+		PasswordField pf = new PasswordField();
+		Button btnReg = new Button("Register");
+		btnReg.setMaxWidth(Double.MAX_VALUE);
+		ListView<String> avatarsList = new ListView<>();
+		avatarsList.setOrientation(Orientation.HORIZONTAL);
+		avatarsList.setPrefSize(290,30);
+		for(String ava : avatars){
+			avatarsList.getItems().add(ava);
+		}
+		avatarsList.setCellFactory(parm -> new ListCell<String>() {
+			private final ImageView imageView = new ImageView();
+
+			@Override
+			public void updateItem(String ava, boolean empty) {
+				super.updateItem(ava, empty);
+				if (empty) {
+					setText(null);
+					setGraphic(null);
+				} else {
+					ImageView avaImageView = new ImageView();
+					Image image = new Image(getClass().getClassLoader().getResource("images/avatars/" + ava).toString(), 20, 20, true, true);
+					avaImageView.setImage(image);
+					setGraphic(avaImageView);
+				}
+			}
+		});
+		
+		avatarsList.setOnMouseClicked((MouseEvent event) -> {
+			if (event.getButton().equals(MouseButton.PRIMARY)) {
+					avatar=avatarsList.getSelectionModel().getSelectedItem();
+			}
+		});
+		//Adding Nodes to GridPane layout
+		gridPane.add(lblUserName, 0, 0);
+		gridPane.add(txtUserName, 1, 0);
+		gridPane.add(lblEmail, 0, 1);
+		gridPane.add(txtEmail, 1, 1);
+		gridPane.add(lblPassword, 0, 2);
+		gridPane.add(pf, 1, 2);
+		gridPane.add(avatarsList, 0, 3,2,2);
+		gridPane.add(btnReg, 0, 5, 2, 2);
+		gridPane.add(lblMessage, 0, 7, 2, 2);
+		txtEmail.focusedProperty().addListener((arg0, oldValue, newValue) -> {
+			if (!newValue) {
+				if (!txtEmail.getText().matches("[A-Za-z0-9._%-]+\\@[A-Za-z]+\\.[A-Za-z]+.")) {
+					lblMessage.setText("invalid Email");
+					txtEmail.setText("");
+				}
+			}
+
+		});
+		
+		btnReg.setOnAction(e -> {
+			String name = txtUserName.getText();
+			String email = txtEmail.getText();
+			String pass = pf.getText();
+			sMan.register(email, pass, name, avatar);
+			System.out.println("reg btn");
+		});
+		gridPane.setAlignment(Pos.CENTER);
+		bp.setCenter(gridPane);
+		return new Scene(bp, 650, 650);
+
+	}
+
 	Pane boardPane = new Pane();
 
 	private Scene createGameRoot() {

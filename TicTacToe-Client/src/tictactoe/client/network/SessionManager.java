@@ -130,7 +130,6 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
     }
     
     public void login(String username, String password){
-        
         AuthMessage msg = new AuthMessage();
         msg.setUserName(username);
         msg.setPassword(password);
@@ -165,6 +164,8 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
         msg.setImage(image);
 
         try {
+			System.out.println("sMan register");
+			System.out.println(email+""+password+""+displayName+""+image);
             netMan.send(MessageTypes.MSG_TYPE_REG, objectMapper.writeValueAsString(msg));
         } catch (IOException ex) {
             Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
