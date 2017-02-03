@@ -162,6 +162,7 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
         msg.setEmail(email);
         msg.setPassword(password);
         msg.setDisplayName(displayName);
+        msg.setImage(image);
 
         try {
             netMan.send(MessageTypes.MSG_TYPE_REG, objectMapper.writeValueAsString(msg));

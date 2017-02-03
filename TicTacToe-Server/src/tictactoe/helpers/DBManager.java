@@ -10,7 +10,7 @@ import org.hibernate.cfg.Configuration;
 import tictactoe.models.Player;
 
 public class DBManager {
-    public static DBManager instance = null;
+    private static DBManager instance = null;
     private SessionFactory factory;
             
     private DBManager(){

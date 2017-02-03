@@ -9,6 +9,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
+import tictactoe.game.GamePlayer;
 import tictactoe.helpers.DBManager;
 import tictactoe.models.Player;
 import tictactoe.network.messages.EndGameMessage;
@@ -19,19 +20,10 @@ import tictactoe.network.messages.MessageTypes;
 
 public class Game implements Runnable, Session.GameMessagesListener{
 
-   
-
-   
-    
     private class GameMove{
         
-        public Session player;
+        public GamePlayer player;
         public GameMoveMessage mvMsg;
-    }
-    
-    private class GameTextMsg{
-        public Session player;
-        public GameChatTextMessage textMsg;
     }
     
     private int moveCount;
@@ -39,14 +31,14 @@ public class Game implements Runnable, Session.GameMessagesListener{
     private enum cellState{Blank, X, O};
     private enum winState{X, O, Draw,NoWin};
     private  cellState [][] gameBoard;
-    private Session p1;
-    private Session p2;
+    private GamePlayer p1;
+    private GamePlayer p2;
     
     private ObjectMapper objectMapper;
     
     private DBManager dbManager;
     
-    private Map<Session, String> playersSymbols = new HashMap<>();
+    private Map<GamePlayer, String> playersSymbols = new HashMap<>();
     
     private Thread th;
     
@@ -55,7 +47,7 @@ public class Game implements Runnable, Session.GameMessagesListener{
     private BlockingQueue<GameMove> queue = new LinkedBlockingQueue<GameMove>();
 //    private BlockingQueue<GameTextMsg> chatQueue = new LinkedBlockingQueue<>();
     
-   public Game(int gridSize, Session p1, Session p2){
+   public Game(int gridSize, GamePlayer p1, GamePlayer p2){
         
          this.moveCount = 0;
          this.gridSize = gridSize;
@@ -70,13 +62,8 @@ public class Game implements Runnable, Session.GameMessagesListener{
          this.objectMapper = new ObjectMapper();
          this.dbManager = DBManager.getInstance();
          
-         
-        Player player1 = this.p1.getPlayer();
-        Player player2 = this.p2.getPlayer();
-        player1.setStatus(Player.STATUS_PLAYING);
-        player2.setStatus(Player.STATUS_PLAYING);
-        this.dbManager.update(player1);
-        this.dbManager.update(player2);
+         this.p1.setStatus(Player.STATUS_PLAYING);
+         this.p2.setStatus(Player.STATUS_PLAYING);
          
          this.playersSymbols.put(p1, cellState.X.toString());
          this.playersSymbols.put(p2, cellState.O.toString());
@@ -131,55 +118,28 @@ public class Game implements Runnable, Session.GameMessagesListener{
                
                if(updateCell(symbl, gameMv.mvMsg.getX(), gameMv.mvMsg.getY())){
                    
-                   Session opponent = getOpponent(gameMv.player);
+                   GamePlayer opponent = getOpponent(gameMv.player);
                    
-                   try {
-                       opponent.send(MessageTypes.MSG_TYPE_GAME_MOVE, this.objectMapper.writeValueAsString(gameMv.mvMsg));
-                   } catch (IOException ex) {
-                       Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
-                   }
+                   opponent.move(gameMv.mvMsg.getX(), gameMv.mvMsg.getY());
                    
                    winState wState = checkWin(symbl, gameMv.mvMsg.getX(), gameMv.mvMsg.getY());
                    
                    if(wState == winState.O || wState == winState.X){
                        
-                       EndGameMessage endMessage = new EndGameMessage();
-                       endMessage.setStatus("Winner");
+                       gameMv.player.end("Winner");
                        
-                       try {
-                           gameMv.player.send(MessageTypes.MSG_TYPE_GAME_END, this.objectMapper.writeValueAsString(endMessage));
-                       } catch (IOException ex) {
-                           Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
-                       }
+                       gameMv.player.addPoints(5);
                        
-                       Player winner = gameMv.player.getPlayer();
-                       winner.addPoints(5);
-                       this.dbManager.update(winner);
-                       
-                       endMessage.setStatus("Looser");
-                       
-                       try {
-                           opponent.send(MessageTypes.MSG_TYPE_GAME_END, this.objectMapper.writeValueAsString(endMessage));
-                       } catch (IOException ex) {
-                           Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
-                       }
-                       
+                       opponent.end("Looser");
+                    
                        stop();
                        
                    }else if(wState == winState.Draw){
                        
-                        EndGameMessage endMessage = new EndGameMessage();
-                        endMessage.setStatus("Winner");
+                        this.p1.end("Draw");
+                        this.p2.end("Draw");
                        
-                       try {
-                           this.p1.send(MessageTypes.MSG_TYPE_GAME_END, this.objectMapper.writeValueAsString(endMessage));
-                           this.p2.send(MessageTypes.MSG_TYPE_GAME_END, this.objectMapper.writeValueAsString(endMessage));
-                       } catch (IOException ex) {
-                           Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
-                       }
-                       
-                       
-                       stop();
+                        stop();
                    }
                    
                }
@@ -196,37 +156,28 @@ public class Game implements Runnable, Session.GameMessagesListener{
    
    
     @Override
-    public void onGameMoveMessage(Session s, GameMoveMessage mvMsg) {
+    public void onGameMoveMessage(GamePlayer p, GameMoveMessage mvMsg) {
         
         GameMove gameMv = new GameMove();
-        gameMv.player = s;
+        gameMv.player = p;
         gameMv.mvMsg = mvMsg;
         
         this.queue.add(gameMv);
     }
     
      @Override
-    public void onGameChatTextMessage(Session s, GameChatTextMessage textMsg) {
-        try {
-            GameTextMsg msg = new GameTextMsg();
-            msg.player = s;
-            msg.textMsg = textMsg;
-            
-            Session opponent = this.getOpponent(s);
-            opponent.send(MessageTypes.MSG_TYPE_CHAT_TEXT, this.objectMapper.writeValueAsString(textMsg));
-        } catch (IOException ex) {
-            Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    public void onGameChatTextMessage(GamePlayer p, GameChatTextMessage textMsg) {
+        
+        GamePlayer opponent = this.getOpponent(p);
+        opponent.sendChatTextMessage(textMsg);
     }
     
      @Override
-    public void onGameEnd(Session s) {
-       Session opponent = getOpponent(s);
+    public void onGameEnd(GamePlayer p) {
+       GamePlayer opponent = getOpponent(p);
        
        if(opponent.isStarted()){
-           Player player = opponent.getPlayer();
-           player.setStatus(Player.STATUS_IDLE);
-           this.dbManager.update(player);
+           opponent.setStatus(Player.STATUS_IDLE);
        }
        stop();
     }
@@ -299,9 +250,9 @@ public class Game implements Runnable, Session.GameMessagesListener{
         return winState.NoWin;
     }
     
-    private Session getOpponent(Session player){
+    private GamePlayer getOpponent(GamePlayer player){
         
-        Session opponent = null;
+        GamePlayer opponent = null;
         
         if(player != this.p1){
             opponent = this.p1;

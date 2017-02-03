@@ -7,6 +7,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
+import tictactoe.game.GamePlayer;
+import tictactoe.game.NetworkPlayer;
 import tictactoe.helpers.AuthHelper;
 import tictactoe.helpers.DBManager;
 import tictactoe.helpers.PlayerHelper;
@@ -27,9 +29,9 @@ import tictactoe.network.messages.RegisterMessage;
 public class Session implements Runnable{
     
     public interface GameMessagesListener{
-        void onGameMoveMessage(Session s, GameMoveMessage mvMsg);
-        void onGameChatTextMessage(Session s ,GameChatTextMessage textMsg);
-        void onGameEnd(Session s);
+        void onGameMoveMessage(GamePlayer p, GameMoveMessage mvMsg);
+        void onGameChatTextMessage(GamePlayer p ,GameChatTextMessage textMsg);
+        void onGameEnd(GamePlayer p);
     }
     
     private BlockingQueue<String> sendQueue = new LinkedBlockingQueue<String>();
@@ -41,7 +43,8 @@ public class Session implements Runnable{
     private SessionManager sessionManager;
     private DBManager dbManager;
     private Player player;
-
+    private GamePlayer gamePlayer;
+    
     public Player getPlayer() {
         return player;
     }
@@ -75,6 +78,8 @@ public class Session implements Runnable{
     
     public Session(Client client){
         this.client = client;
+        this.gamePlayer = new NetworkPlayer(this);
+        
         this.objectMapper = new ObjectMapper();
         this.sessionManager = SessionManager.getInstance();
         this.dbManager = DBManager.getInstance();
@@ -112,6 +117,11 @@ public class Session implements Runnable{
     public boolean isStarted(){
         return isStarted;
     }
+    
+    public GamePlayer getGamePlayer(){
+        return this.gamePlayer;
+    }
+    
     public void send(String type,String msg){
         
         type ="type=" + type + "\n";
@@ -131,7 +141,7 @@ public class Session implements Runnable{
         
         if(this.gameMessageListener != null){
             
-            this.gameMessageListener.onGameMoveMessage(this, mvMsg);
+            this.gameMessageListener.onGameMoveMessage(this.gamePlayer, mvMsg);
             
         }
     }
@@ -140,7 +150,7 @@ public class Session implements Runnable{
         
         if(this.gameMessageListener != null){
             
-            this.gameMessageListener.onGameChatTextMessage(this, textMsg);
+            this.gameMessageListener.onGameChatTextMessage(this.gamePlayer, textMsg);
             
         }
     }
@@ -148,7 +158,7 @@ public class Session implements Runnable{
         
         if(this.gameMessageListener != null){
             
-            this.gameMessageListener.onGameEnd(this);
+            this.gameMessageListener.onGameEnd(this.gamePlayer);
             
         }
     }
@@ -274,7 +284,7 @@ public class Session implements Runnable{
                                     
                                      Session receiver = sessionManager.getSessionByPlayerId(gameResponse.getSenderId());
                                      
-                                     new Game(3, receiver ,this).start();
+                                     new Game(3, receiver.getGamePlayer() ,this.gamePlayer).start();
                                      
                                  }else{
                                      sessionManager.getSessionByPlayerId(gameResponse.getReciverId()).send(MessageTypes.MSG_TYPE_GAME_RESPONSE,
