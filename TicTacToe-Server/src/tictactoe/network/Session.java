@@ -228,7 +228,7 @@ public class Session implements Runnable{
                                 regResultMsg.setErrors(regResult.getErrors());
                                 regResultMsg.setPlayer(regResult.getResult());
                                 
-                                this.send(MessageTypes.MSG_TYPE_REG,this.objectMapper.writeValueAsString(regResultMsg));
+                                this.send(MessageTypes.MSG_TYPE_AUTH,this.objectMapper.writeValueAsString(regResultMsg));
 
                                 break;
                  

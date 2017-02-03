@@ -143,6 +143,8 @@ public class Game extends Application {
 				player = p;
 				game = createGameRoot();
 				thestage.setScene(game);
+                                
+                                sMan.sendListPlayers();
 			});
 		}
 
