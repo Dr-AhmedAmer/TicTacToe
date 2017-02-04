@@ -9,6 +9,7 @@ create table players(
     display_name varchar (100) not null,
     email varchar (100) not null unique,
     password varchar (255) not null,
+    image varchar (255) not null,
     points int default 0,
     status char (5),
     primary key (id)

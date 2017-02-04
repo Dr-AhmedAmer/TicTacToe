@@ -1,0 +1,47 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Feb 4, 2017, 6:10:17 AM
+    Author     : salamaashoush
+*/
+
+@font-face {
+    font-family: 'OpenSansEmoji';
+    src: url('OpenSansEmoji.ttf');
+}
+
+.text-field {
+    -fx-font-family: OpenSansEmoji;
+    -fx-font-size: 32;
+}
+.emoji-button {
+    -fx-font-family: OpenSansEmoji;
+    -fx-font-size: 24;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.emoji-button:hover {
+    -fx-text-fill: deepskyblue;
+}
+
+.emoji-pane {
+    -fx-padding: 6;
+    -fx-background-color: lightgray;
+    -fx-border-color: darkgrey;
+}
+.iconified-button {
+    -fx-skin: "com.guigarage.controls.IconifiedButtonSkin";
+    -fx-font-family: FontAwesome !important;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+.iconified-button .text {
+    -fx-font-family: FontAwesome !important;
+}

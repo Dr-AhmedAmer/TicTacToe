@@ -1,5 +1,9 @@
 package tictactoe.gui;
 
+import java.awt.Container;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -12,6 +16,7 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -19,8 +24,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -37,6 +44,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -52,8 +60,12 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javax.imageio.ImageIO;
 import tictactoe.client.game.GameManager;
 import tictactoe.client.network.SessionManager;
 import tictactoe.models.Player;
@@ -196,6 +208,7 @@ public class Game extends Application {
 			Platform.runLater(() -> {
 				player = p;
 				game = createGameRoot();
+				game.getStylesheets().add(getClass().getClassLoader().getResource("style.css").toExternalForm());
 				thestage.setScene(game);
 				sMan.sendListPlayers();
 			});
@@ -223,9 +236,10 @@ public class Game extends Application {
 			Platform.runLater(() -> {
 				responsetxt.setFont(Font.font(responsetxt.getFont().toString(), FontWeight.BOLD, 60));
 				reqvb.setAlignment(Pos.CENTER);
-				if(winner.equals("Winner")){
+				if (winner.equals("Winner")) {
+					
 					responsetxt.setFill(Color.GREEN);
-				}else{
+				} else {
 					responsetxt.setFill(Color.RED);
 				}
 				responsetxt.setText(winner);
@@ -261,7 +275,7 @@ public class Game extends Application {
 	public void setgMan(GameManager gMan) {
 		this.gMan = gMan;
 	}
-
+	
 	private void genrateListView(List<Player> players) {
 		ObservableList<Player> playerslist = FXCollections.observableArrayList(players);
 		playerslist.forEach(p -> {
@@ -278,17 +292,20 @@ public class Game extends Application {
 				} else {
 					HBox hBox = new HBox();
 					hBox.setSpacing(3);
+					VBox ptvb=new VBox();
+					ptvb.setAlignment(Pos.CENTER);
+					Text pt=new Text(String.valueOf(player.getPoints()));
+					pt.setFont(Font.font(pt.getFont().toString(), FontWeight.BLACK, FontPosture.ITALIC, 10));
 					Text name = new Text(player.getDisplayName());
-
 					ImageView statusImageView = new ImageView();
 					Image statusImage = new Image(getClass().getClassLoader().getResource("images/" + player.getStatus() + ".png").toString(), 16, 16, true, true);
 					statusImageView.setImage(statusImage);
-
+					ptvb.getChildren().addAll(statusImageView,pt,name);
 					ImageView pictureImageView = new ImageView();
 					Image image = new Image(getClass().getClassLoader().getResource("images/avatars/" + player.getImage()).toString(), 50, 50, true, true);
 					pictureImageView.setImage(image);
 
-					hBox.getChildren().addAll(pictureImageView, statusImageView, name);
+					hBox.getChildren().addAll(pictureImageView, ptvb);
 					hBox.setAlignment(Pos.CENTER_LEFT);
 
 					setGraphic(hBox);
@@ -508,6 +525,7 @@ public class Game extends Application {
 			vBox.setSpacing(3);
 			Text name = new Text("Me");
 			Text messeget = new Text(chatText.getText());
+			chatText.clear();
 			messeget.setFont(Font.font(messeget.getFont().toString(), FontWeight.LIGHT, FontPosture.ITALIC, 14));
 			ImageView pictureImageView = new ImageView();
 			Image image = new Image(getClass().getClassLoader().getResource("images/avatars/" + player.getImage()).toString(), 20, 20, true, true);
@@ -519,6 +537,15 @@ public class Game extends Application {
 			vBox.getChildren().addAll(hBox, messeget);
 			chatList.getItems().add(vBox);
 		});
+		
+		byte[] emojiBytes = new byte[]{(byte)0xF0, (byte)0x9F, (byte)0x98, (byte)0x81};
+		String emojiAsString = new String(emojiBytes, Charset.forName("UTF-8"));
+		chatEmojBtn.setText(emojiAsString);
+		Popup popup = new Popup(); popup.setX(300); popup.setY(200);
+		popup.getContent().addAll();
+		chatEmojBtn.setOnAction((event) -> {
+			chatText.setText(chatText.getText()+chatEmojBtn.getText());
+	});
 		Menu gamem = new Menu("_Game");
 		gamem.setMnemonicParsing(true);
 		MenuItem newItem = new MenuItem("New");
@@ -545,13 +572,42 @@ public class Game extends Application {
 		return new Scene(root, 650, 650);
 	}
 
+	public Parent createShare() {
+		VBox container =new VBox();
+		Platform.runLater(() -> {
+			Button facebook = new Button("Facebook", new ImageView(new Image(getClass().getClassLoader().getResource("images/fb.png").toString(), 20, 20, true, true)));
+			Button twitter = new Button("Twitter", new ImageView(new Image(getClass().getClassLoader().getResource("images/tw.png").toString(), 20, 20, true, true)));
+			HBox sharehb = new HBox();
+			sharehb.getChildren().addAll(facebook, twitter);
+			
+			WritableImage image = boardPane.snapshot(new SnapshotParameters(), null);
+			// TODO: probably use a file chooser here
+			File file = new File("chart.png");
+			try {
+				ImageIO.write(SwingFXUtils.fromFXImage(image, null), "png", file);
+			} catch (IOException e) {
+				// TODO: handle exception here
+			}
+			WebView browser = new WebView();
+			container.getChildren().addAll(browser,sharehb);
+			container.setAlignment(Pos.CENTER);
+			WebEngine webEngine = browser.getEngine();
+			facebook.setOnAction((event) -> {
+				webEngine.load("https://www.facebook.com/sharer/sharer.php?u="+getClass().getClassLoader().getResource("screenshots/chart.png").toString());
+			});
+			
+		});
+		return container;
+
+	}
+
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		thestage = primaryStage;
 		sMan.setAuthListener(authListener);
 		gMan.setGameListener(gameListener);
 		sMan.setGameControlListener(gameControlListener);
-
+		
 		login = createLoginRoot();
 		primaryStage.setResizable(false);
 		primaryStage.setScene(login);
@@ -577,7 +633,7 @@ public class Game extends Application {
 			line.setStartY(combo.tiles[0].getCenterY());
 			line.setEndX(combo.tiles[0].getCenterX());
 			line.setEndY(combo.tiles[0].getCenterY());
-
+			
 			boardPane.getChildren().add(line);
 
 			Timeline timeline = new Timeline();
