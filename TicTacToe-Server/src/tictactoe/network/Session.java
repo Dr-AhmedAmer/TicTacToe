@@ -7,6 +7,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
+import tictactoe.game.AIMiniMax;
 import tictactoe.game.GamePlayer;
 import tictactoe.game.NetworkPlayer;
 import tictactoe.helpers.AuthHelper;
@@ -268,6 +269,25 @@ public class Session implements Runnable{
                                  sessionManager.getSessionByPlayerId(gameRequest.getReciverId())
                                     .send(MessageTypes.MSG_TYPE_GAME_REQUEST, this.objectMapper.writeValueAsString(gameRequest));
                                 }
+                                 break;
+                                 
+                            case MessageTypes.MSG_TYPE_GAME_AI_REQUEST:
+                                
+                                GameRequestMessage aiGameRequest = this.objectMapper.readValue(msg, GameRequestMessage.class);
+                                
+                                GameResponseMessage aiGameResponse = new GameResponseMessage();
+                                aiGameResponse.setReciverId(aiGameRequest.getSenderId());
+                                aiGameResponse.setSenderId(-1);
+                                aiGameResponse.setResponse(0);
+                                aiGameResponse.setSymbol("X");
+                                
+                                Session session = sessionManager.getSessionByPlayerId(aiGameRequest.getSenderId());
+                                session.send(MessageTypes.MSG_TYPE_GAME_RESPONSE, 
+                                        this.objectMapper.writeValueAsString(aiGameResponse));
+                                
+                                new Game(3, this.gamePlayer, new AIMiniMax(new char[][]{{'B','B','B'},{'B','B','B'},{'B','B','B'}},
+                                        'o', 'x')).start();
+                                
                                  break;
                                  
                             case MessageTypes.MSG_TYPE_GAME_RESPONSE:

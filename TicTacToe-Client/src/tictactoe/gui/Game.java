@@ -211,7 +211,7 @@ public class Game extends Application {
 			Platform.runLater(() -> {
 				player = p;
 				game = createGameRoot();
-				game.getStylesheets().add(getClass().getClassLoader().getResource("style.css").toExternalForm());
+//				game.getStylesheets().add(getClass().getClassLoader().getResource("style.css").toExternalForm());
 				thestage.setScene(game);
 
 			});

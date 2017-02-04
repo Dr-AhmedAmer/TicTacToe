@@ -1,11 +1,12 @@
 
 package tictactoe.game;
 
+import tictactoe.network.Game;
 import tictactoe.network.Session;
 import tictactoe.network.messages.GameChatTextMessage;
 
 public interface GamePlayer {
-    void move(int x, int y);
+    void move(Game.cellState[][] gameBoard, int x, int y);
     void end(String status);
     void sendChatTextMessage(GameChatTextMessage txtMsg);
     void addPoints(int points);

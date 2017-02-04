@@ -113,6 +113,20 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
         }
     }
     
+    public void sendAIInvite(int userId){
+        
+        GameRequestMessage msg = new GameRequestMessage();
+        
+        msg.setSenderId(this.player.getId());
+        msg.setReciverId(userId);
+        
+        try {
+            netMan.send(MessageTypes.MSG_TYPE_GAME_AI_REQUEST, objectMapper.writeValueAsString(msg));
+        } catch (IOException ex) {
+            Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     public void sendResponse(int receiverId, int response){
         
         GameResponseMessage msg = new GameResponseMessage();

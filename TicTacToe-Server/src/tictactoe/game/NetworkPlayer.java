@@ -34,7 +34,7 @@ public class NetworkPlayer implements GamePlayer {
     }
     
     @Override
-    public void move(int x, int y) {
+    public void move(Game.cellState[][] gameBoard, int x, int y) {
         
         GameMoveMessage msg = new GameMoveMessage();
         msg.setX(x);

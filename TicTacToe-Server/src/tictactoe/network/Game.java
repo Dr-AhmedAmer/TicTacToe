@@ -29,7 +29,7 @@ public class Game implements Runnable, Session.GameMessagesListener{
     private int moveCount;
     private int gridSize;
     private SessionManager sMan = SessionManager.getInstance();
-    private enum cellState{Blank, X, O};
+    public static enum cellState{Blank, X, O};
     private enum winState{X, O, Draw,NoWin};
     private  cellState [][] gameBoard;
     private GamePlayer p1;
@@ -125,7 +125,7 @@ public class Game implements Runnable, Session.GameMessagesListener{
                    
                    GamePlayer opponent = getOpponent(gameMv.player);
                    
-                   opponent.move(gameMv.mvMsg.getX(), gameMv.mvMsg.getY());
+                   opponent.move(this.gameBoard, gameMv.mvMsg.getX(), gameMv.mvMsg.getY());
                    
                    winState wState = checkWin(symbl, gameMv.mvMsg.getX(), gameMv.mvMsg.getY());
                    
@@ -251,7 +251,7 @@ public class Game implements Runnable, Session.GameMessagesListener{
             }
         }
          
-        if(this.moveCount == Math.pow(this.gridSize, 2) -1)
+        if(this.moveCount == Math.pow(this.gridSize, 2))
              return winState.Draw;
         
         return winState.NoWin;
