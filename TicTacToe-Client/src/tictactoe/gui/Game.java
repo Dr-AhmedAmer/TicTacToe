@@ -2,6 +2,8 @@ package tictactoe.gui;
 
 import java.awt.Container;
 import java.io.File;
+import tictactoe.emoji.*;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -73,7 +75,7 @@ import tictactoe.models.Player;
 public class Game extends Application {
 
 	ListView<Player> listView = new ListView<>();
-	Button chatEmojBtn = new Button("emoj");
+	Button chatEmojBtn = new Button();
 	Button chatSend = new Button("Send");
 	TextArea chatText = new TextArea();
 	ListView chatList = new ListView();
@@ -503,9 +505,7 @@ public class Game extends Application {
 
 		chatEmojBtn.setPrefWidth(30);
 		chatEmojBtn.setPrefHeight(Double.MAX_VALUE);
-
-		ImageView chatEmoj = new ImageView();
-
+		ImageView chatEmoj = new ImageView(new Image(getClass().getClassLoader().getResource("images/emoji.png").toString(), 30, 30, true, true));
 		chatEmojBtn.setGraphic(chatEmoj);
 		chatHbox.getChildren().addAll(chatText, chatSend, chatEmojBtn);
 		ScrollPane chatScroll = new ScrollPane();
@@ -539,13 +539,11 @@ public class Game extends Application {
 			chatList.getItems().add(vBox);
 		});
 		
-		byte[] emojiBytes = new byte[]{(byte)0xF0, (byte)0x9F, (byte)0x98, (byte)0x81};
-		String emojiAsString = new String(emojiBytes, Charset.forName("UTF-8"));
-		chatEmojBtn.setText(emojiAsString);
-		Popup popup = new Popup(); popup.setX(300); popup.setY(200);
-		popup.getContent().addAll();
+		
 		chatEmojBtn.setOnAction((event) -> {
-			chatText.setText(chatText.getText()+chatEmojBtn.getText());
+			EmojiUtil.showEmojiPopup(chatVbox, true, e->{
+				chatText.setText(chatText.getText()+e.getEmoji());
+			});
 	});
 		Menu gamem = new Menu("_Game");
 		gamem.setMnemonicParsing(true);
