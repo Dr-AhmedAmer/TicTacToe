@@ -7,6 +7,7 @@ import java.util.Iterator;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import tictactoe.models.Player;
 
@@ -16,7 +17,8 @@ public class PlayerHelper {
         
         Session session = DBManager.getInstance().openSession();
         Criteria cr = session.createCriteria(Player.class);
-        cr.add(Restrictions.eq("status", Player.STATUS_IDLE));
+//        cr.add(Restrictions.eq("status", Player.STATUS_IDLE));
+        cr.addOrder(Order.desc("points"));
         cr.add(Restrictions.ne("id", meId));
         List results = cr.list();
         

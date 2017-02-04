@@ -28,6 +28,8 @@ import tictactoe.network.messages.RegisterMessage;
 
 public class Session implements Runnable{
     
+ 
+    
     public interface GameMessagesListener{
         void onGameMoveMessage(GamePlayer p, GameMoveMessage mvMsg);
         void onGameChatTextMessage(GamePlayer p ,GameChatTextMessage textMsg);
@@ -44,6 +46,9 @@ public class Session implements Runnable{
     private DBManager dbManager;
     private Player player;
     private GamePlayer gamePlayer;
+    
+    private SessionManager sMan;
+   
     
     public Player getPlayer() {
         return player;
@@ -83,6 +88,7 @@ public class Session implements Runnable{
         this.objectMapper = new ObjectMapper();
         this.sessionManager = SessionManager.getInstance();
         this.dbManager = DBManager.getInstance();
+        sMan = SessionManager.getInstance();
     }
     
     public void start(){
@@ -109,7 +115,9 @@ public class Session implements Runnable{
             
             this.player.setStatus(Player.STATUS_OFFLINE);
             this.dbManager.update(this.player);
+
         }
+        sMan.refreshPlayerList();
         onGameEnd();
             
     }
@@ -145,6 +153,7 @@ public class Session implements Runnable{
             
         }
     }
+    
     
      public void onGameChatTextMessage(GameChatTextMessage textMsg){
         
@@ -204,6 +213,7 @@ public class Session implements Runnable{
                                 authResultMsg.setPlayer(authResult.getResult());
 
                                 this.send(MessageTypes.MSG_TYPE_AUTH,this.objectMapper.writeValueAsString(authResultMsg));
+                                sMan.refreshPlayerList();
 
                                 break;
 
@@ -229,7 +239,7 @@ public class Session implements Runnable{
                                 regResultMsg.setPlayer(regResult.getResult());
                                 
                                 this.send(MessageTypes.MSG_TYPE_AUTH,this.objectMapper.writeValueAsString(regResultMsg));
-
+                                sMan.refreshPlayerList();
                                 break;
                  
                         }
@@ -321,6 +331,7 @@ public class Session implements Runnable{
             }else{
                 
                 this.stop();
+                
                 System.out.println("client dropped");
                 
             }

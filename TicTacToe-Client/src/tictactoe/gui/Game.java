@@ -183,6 +183,7 @@ public class Game extends Application {
 				if (players == null) {
 					System.out.println("Empty");
 				} else {
+                                        listView.getItems().clear();
 					genrateListView(players);
 					listView.setOnMouseClicked((MouseEvent event) -> {
 						if (event.getButton().equals(MouseButton.PRIMARY)) {
@@ -210,7 +211,7 @@ public class Game extends Application {
 				game = createGameRoot();
 				game.getStylesheets().add(getClass().getClassLoader().getResource("style.css").toExternalForm());
 				thestage.setScene(game);
-				sMan.sendListPlayers();
+
 			});
 		}
 

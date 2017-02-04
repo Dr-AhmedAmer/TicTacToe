@@ -9,6 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import tictactoe.helpers.DBManager;
 
 public class Server implements Runnable{
     
@@ -17,9 +18,12 @@ public class Server implements Runnable{
     private boolean isConnected;
     private Thread th;
     private boolean isStarted;
+    private boolean isInitialized = false;
+    private DBManager dBManager = DBManager.getInstance();
             
     public Server(int port){
-        this.port = port;     
+        this.port = port;
+       
     }
     
     public void stop(){
@@ -40,17 +44,27 @@ public class Server implements Runnable{
     }
     
     public void run(){
+        
+        if(!isInitialized){
+                        dBManager.initializePlayerStatus();
+                        isInitialized =true;
+                    }
+        
         connectSocket();
         
         while (isStarted){
             if(this.isConnected)
             {
                 try {
+                     
                     Socket socket = serverSocket.accept();
                     
                     Client client = new Client(socket);
                     Session session = new Session(client);
                     session.start();
+                    
+                   
+                    
                 } catch (IOException ex) {
                     Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
                     this.isConnected = false;

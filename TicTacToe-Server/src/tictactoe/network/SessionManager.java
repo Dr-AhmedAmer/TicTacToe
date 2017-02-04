@@ -1,17 +1,31 @@
 
 package tictactoe.network;
 
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import tictactoe.helpers.PlayerHelper;
+import tictactoe.helpers.ResultList;
+import tictactoe.models.Player;
+import tictactoe.network.messages.MessageTypes;
+import tictactoe.network.messages.PlayersListMessage;
+import org.codehaus.jackson.map.ObjectMapper;
 
-public class SessionManager {
+public class SessionManager{
     
     private static SessionManager instance;
     
     private HashMap<Integer, Session> sessions;
+    private ObjectMapper objectMapper;
     
     private SessionManager(){
         
         this.sessions = new HashMap<Integer, Session>();
+        this.objectMapper = new ObjectMapper();
         
     }
     
@@ -41,6 +55,24 @@ public class SessionManager {
         
         this.sessions.remove(playerId);
         
+    }
+
+    
+    public void refreshPlayerList() {
+        for (Map.Entry pair : sessions.entrySet()) {
+            Session s =(Session) pair.getValue();
+            System.out.println("tictactoe.network.SessionManager.onPlayerLog()");
+             ResultList <Player> resultList = PlayerHelper.getIdlePlayersExceptMe(s.getPlayer().getId());
+             PlayersListMessage playerListMessage = new PlayersListMessage();
+             playerListMessage.setPlayerList(resultList.getResults());
+             
+            try {
+                s.send(MessageTypes.MSG_TYPE_LIST,this.objectMapper.writeValueAsString(playerListMessage));
+            } catch (IOException ex) {
+                Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        }
     }
     
 }

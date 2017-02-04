@@ -9,9 +9,12 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.PostUpdate;
 import javax.persistence.Table;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.hibernate.Session;
+
+
 
 /**
  *
@@ -22,6 +25,7 @@ import org.hibernate.Session;
 @Table(name = "players")
 public class Player {
     
+//    private SessionManager sMan = SessionManager.getInstance();
     public final static String STATUS_OFFLINE = "offln";
     public final static String STATUS_IDLE = "idle";
     public final static String STATUS_PLAYING = "play";
@@ -48,6 +52,11 @@ public class Player {
 
     @Column(name = "image")
     private String image;
+    
+//    @PostUpdate
+//    public void refreshPlayerList(){
+//        
+//    }
 
     public String getImage() {
 	return image;
