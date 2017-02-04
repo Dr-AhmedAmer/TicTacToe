@@ -16,7 +16,7 @@ public class PlayerHelper {
         
         Session session = DBManager.getInstance().openSession();
         Criteria cr = session.createCriteria(Player.class);
-        cr.add(Restrictions.eq("status", Player.STATUS_IDLE));
+//        cr.add(Restrictions.eq("status", Player.STATUS_IDLE));
         cr.add(Restrictions.ne("id", meId));
         List results = cr.list();
         

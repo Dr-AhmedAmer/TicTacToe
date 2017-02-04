@@ -28,6 +28,7 @@ public class Game implements Runnable, Session.GameMessagesListener{
     
     private int moveCount;
     private int gridSize;
+    private SessionManager sMan = SessionManager.getInstance();
     private enum cellState{Blank, X, O};
     private enum winState{X, O, Draw,NoWin};
     private  cellState [][] gameBoard;
@@ -57,6 +58,7 @@ public class Game implements Runnable, Session.GameMessagesListener{
          
          this.p1.setGameMessageListener(this);
          this.p2.setGameMessageListener(this);
+   
          
          
          this.objectMapper = new ObjectMapper();
@@ -64,6 +66,7 @@ public class Game implements Runnable, Session.GameMessagesListener{
          
          this.p1.setStatus(Player.STATUS_PLAYING);
          this.p2.setStatus(Player.STATUS_PLAYING);
+         sMan.refreshPlayerList();
          
          this.playersSymbols.put(p1, cellState.X.toString());
          this.playersSymbols.put(p2, cellState.O.toString());
@@ -98,11 +101,16 @@ public class Game implements Runnable, Session.GameMessagesListener{
        
        if(this.p1 != null){
            this.p1.setGameMessageListener(null);
+           this.p1.setStatus(Player.STATUS_IDLE);
        }
        
        if(this.p2 != null){
            this.p2.setGameMessageListener(null);
+           this.p2.setStatus(Player.STATUS_IDLE);
        }
+        
+        
+         sMan.refreshPlayerList();
    }
    
    public void run(){
@@ -178,7 +186,9 @@ public class Game implements Runnable, Session.GameMessagesListener{
        
        if(opponent.isStarted()){
            opponent.setStatus(Player.STATUS_IDLE);
+           
        }
+       sMan.refreshPlayerList();
        stop();
     }
     
