@@ -12,6 +12,7 @@ import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -67,6 +68,19 @@ public class DBManager {
             s.close();
         }
         
+    }
+    public void initializePlayerStatus(){
+        
+    Session session = this.openSession();
+    Transaction tx =session.beginTransaction();
+
+    String queryString = "update Player p set p.status=:status";
+    Query query = session.createQuery(queryString);
+    query.setString("status", "offln");
+    query.executeUpdate();
+    tx.commit();
+    session.close();
+    
     }
  
     

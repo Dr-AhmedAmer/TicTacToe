@@ -115,9 +115,9 @@ public class Session implements Runnable{
             
             this.player.setStatus(Player.STATUS_OFFLINE);
             this.dbManager.update(this.player);
-            sMan.refreshPlayerList();
+
         }
-        
+        sMan.refreshPlayerList();
         onGameEnd();
             
     }

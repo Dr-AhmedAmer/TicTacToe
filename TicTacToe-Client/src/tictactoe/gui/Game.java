@@ -3,6 +3,8 @@ package tictactoe.gui;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -10,10 +12,12 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -24,6 +28,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SeparatorMenuItem;
@@ -65,11 +70,11 @@ public class Game extends Application {
 	private GameManager gMan = GameManager.getInstance();
 	private boolean playable = true;
 	private boolean yourTurn = false;
+	private boolean sender = false;
 	private String playerSymbol;
 	private String opponentSymbol;
 	private Color opponentColor = Color.rgb(41, 128, 185);
 	private Color playerColor = Color.rgb(192, 57, 43);
-	private int response;
 	private Tile[][] board = new Tile[3][3];
 	private List<Combo> combos = new ArrayList<>();
 	Scene login;
@@ -79,35 +84,83 @@ public class Game extends Application {
 	String user;
 	String pw;
 	Label lblMessage = new Label();
-
+	StackPane rootstack = new StackPane();
+	ImageView wait = new ImageView(new Image(getClass().getClassLoader().getResource("images/wait.gif").toString()));
+	Text responsetxt = new Text();
+	VBox reqvb = new VBox();
 	private SessionManager.GameControlListener gameControlListener = new SessionManager.GameControlListener() {
 		@Override
 		public void onGameRequest(int senderId) {
-			System.out.println("request from" + senderId);
-			System.out.println("enter response");
-			Scanner sc = new Scanner(System.in);
-			response = sc.nextInt();
-			sMan.sendResponse(senderId, response);
+			Platform.runLater(() -> {
+				Button accept = new Button("Accept", new ImageView(new Image(getClass().getClassLoader().getResource("images/ok.png").toString(), 50, 50, true, true)));
+				Button reject = new Button("Reject", new ImageView(new Image(getClass().getClassLoader().getResource("images/not.png").toString(), 50, 50, true, true)));
+				reject.setPrefWidth(200);
+				accept.setPrefWidth(200);
+
+				reqvb.getChildren().setAll(accept, reject);
+				reqvb.setAlignment(Pos.CENTER);
+				rootstack.getChildren().add(reqvb);
+				accept.setOnAction((event) -> {
+					try {
+						sMan.sendResponse(senderId, 0);
+						Thread.sleep(500);
+						rootstack.getChildren().remove(reqvb);
+					} catch (InterruptedException ex) {
+						Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
+					}
+				});
+				reject.setOnAction((event) -> {
+					try {
+						sMan.sendResponse(senderId, 1);
+						Thread.sleep(500);
+						rootstack.getChildren().remove(reqvb);
+					} catch (InterruptedException ex) {
+						Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
+					}
+				});
+			});
 
 		}
 
 		@Override
 		public void onGameResponse(int senderId, int response, String symbol) {
 
-			if (response == 0) {
-				System.out.println("player accepted");
-				gMan.startGame();
-				if (symbol.equals("X")) {
-					yourTurn = true;
-					opponentSymbol = "O";
-				} else {
-					opponentSymbol = "X";
-				}
-				playerSymbol = symbol;
+			Platform.runLater(() -> {
+				responsetxt.setFont(Font.font(responsetxt.getFont().toString(), FontWeight.BOLD, 24));
+				reqvb.setAlignment(Pos.CENTER);
+				reqvb.getChildren().setAll(responsetxt);
+				if (response == 0) {
+					if (sender) {
+						rootstack.getChildren().remove(wait);
+						responsetxt.setText("Player Accepted");
+						responsetxt.setFill(Color.GREEN);
+						rootstack.getChildren().add(reqvb);
 
-			} else {
-				System.out.println("player declined");
-			}
+						reqvb.setOnMouseClicked((event) -> {
+							rootstack.getChildren().remove(reqvb);
+						});
+					}
+					if (symbol.equals("X")) {
+						yourTurn = true;
+						opponentSymbol = "O";
+					} else {
+						opponentSymbol = "X";
+					}
+					playerSymbol = symbol;
+					gMan.startGame();
+
+				} else {
+					if (sender) {
+						rootstack.getChildren().remove(wait);
+						responsetxt.setFill(Color.RED);
+						responsetxt.setText("Player Rejected");
+						reqvb.setOnMouseClicked((event) -> {
+							rootstack.getChildren().remove(reqvb);
+						});
+					}
+
+				}
+			});
 
 		}
 
@@ -124,10 +177,12 @@ public class Game extends Application {
 						if (event.getButton().equals(MouseButton.PRIMARY)) {
 							if (event.getClickCount() == 2) {
 								sMan.sendInvite(listView.getSelectionModel().getSelectedItem().getId());
+								rootstack.getChildren().add(wait);
+								sender = true;
+
 							}
 						}
 					});
-//				sMan.sendListPlayers();
 				}
 
 			});
@@ -140,12 +195,10 @@ public class Game extends Application {
 		@Override
 		public void onSuccess(Player p) {
 			Platform.runLater(() -> {
-				System.out.println("onSucess");
 				player = p;
 				game = createGameRoot();
 				thestage.setScene(game);
-                                
-//                                sMan.sendListPlayers();
+
 			});
 		}
 
@@ -168,7 +221,19 @@ public class Game extends Application {
 
 		@Override
 		public void onGameEnd(String winner) {
-			System.out.println(winner);
+			Platform.runLater(() -> {
+				responsetxt.setFont(Font.font(responsetxt.getFont().toString(), FontWeight.BOLD, 60));
+				reqvb.setAlignment(Pos.CENTER);
+				if(winner.equals("Winner")){
+					responsetxt.setFill(Color.GREEN);
+				}else{
+					responsetxt.setFill(Color.RED);
+				}
+				responsetxt.setText(winner);
+				reqvb.getChildren().setAll(responsetxt);
+				rootstack.getChildren().add(reqvb);
+			});
+
 		}
 
 		@Override
@@ -203,9 +268,8 @@ public class Game extends Application {
 		playerslist.forEach(p -> {
 			listView.getItems().add(p);
 		});
-		listView.setCellFactory(parm -> new ListCell<Player>() {
-			private final ImageView imageView = new ImageView();
 
+		listView.setCellFactory(parm -> new ListCell<Player>() {
 			@Override
 			public void updateItem(Player player, boolean empty) {
 				super.updateItem(player, empty);
@@ -231,6 +295,7 @@ public class Game extends Application {
 					setGraphic(hBox);
 
 				}
+
 			}
 		});
 	}
@@ -279,7 +344,7 @@ public class Game extends Application {
 			sMan.login(user, pw);
 		});
 		btnSignUp.setOnAction((event) -> {
-			signup=createSignUPRoot();
+			signup = createSignUPRoot();
 			thestage.setScene(signup);
 		});
 		gridPane.setAlignment(Pos.CENTER);
@@ -288,6 +353,7 @@ public class Game extends Application {
 
 	}
 	String avatar;
+
 	private Scene createSignUPRoot() {
 		String avatars[] = {"man1.png", "man2.png", "man3.png", "man4.png", "girl1.png", "girl2.png", "girl3.png", "girl4.png"};
 		BorderPane bp = new BorderPane();
@@ -311,8 +377,8 @@ public class Game extends Application {
 		btnReg.setMaxWidth(Double.MAX_VALUE);
 		ListView<String> avatarsList = new ListView<>();
 		avatarsList.setOrientation(Orientation.HORIZONTAL);
-		avatarsList.setPrefSize(290,30);
-		for(String ava : avatars){
+		avatarsList.setPrefSize(290, 30);
+		for (String ava : avatars) {
 			avatarsList.getItems().add(ava);
 		}
 		avatarsList.setCellFactory(parm -> new ListCell<String>() {
@@ -332,10 +398,10 @@ public class Game extends Application {
 				}
 			}
 		});
-		
+
 		avatarsList.setOnMouseClicked((MouseEvent event) -> {
 			if (event.getButton().equals(MouseButton.PRIMARY)) {
-					avatar=avatarsList.getSelectionModel().getSelectedItem();
+				avatar = avatarsList.getSelectionModel().getSelectedItem();
 			}
 		});
 		//Adding Nodes to GridPane layout
@@ -345,7 +411,7 @@ public class Game extends Application {
 		gridPane.add(txtEmail, 1, 1);
 		gridPane.add(lblPassword, 0, 2);
 		gridPane.add(pf, 1, 2);
-		gridPane.add(avatarsList, 0, 3,2,2);
+		gridPane.add(avatarsList, 0, 3, 2, 2);
 		gridPane.add(btnReg, 0, 5, 2, 2);
 		gridPane.add(lblMessage, 0, 7, 2, 2);
 		txtEmail.focusedProperty().addListener((arg0, oldValue, newValue) -> {
@@ -357,7 +423,7 @@ public class Game extends Application {
 			}
 
 		});
-		
+
 		btnReg.setOnAction(e -> {
 			String name = txtUserName.getText();
 			String email = txtEmail.getText();
@@ -376,7 +442,6 @@ public class Game extends Application {
 	private Scene createGameRoot() {
 
 		BorderPane root = new BorderPane();
-
 		boardPane.setPrefSize(450, 450);
 		root.setPrefSize(650, 650);
 
@@ -432,7 +497,10 @@ public class Game extends Application {
 
 		chatScroll.setContent(chatList);
 		chatList.setPrefSize(600, 150);
-		chatVbox.getChildren().addAll(boardPane, chatScroll, chatHbox);
+
+		rootstack.getChildren().add(boardPane);
+		rootstack.setAlignment(Pos.CENTER);
+		chatVbox.getChildren().addAll(rootstack, chatScroll, chatHbox);
 		chatSend.setOnAction(e -> {
 			sMan.sendChatMessage(player, chatText.getText());
 			HBox hBox = new HBox();
@@ -471,6 +539,7 @@ public class Game extends Application {
 		MenuBar bar = new MenuBar();
 		bar.getMenus().addAll(gamem, playerm);
 		bar.setPrefHeight(20);
+
 		root.setTop(bar);
 		root.setCenter(chatVbox);
 		root.setRight(listView);

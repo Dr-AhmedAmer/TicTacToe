@@ -35,10 +35,6 @@ public class Game implements Runnable, Session.GameMessagesListener{
     private GamePlayer p1;
     private GamePlayer p2;
     
-    private ObjectMapper objectMapper;
-    
-    private DBManager dbManager;
-    
     private Map<GamePlayer, String> playersSymbols = new HashMap<>();
     
     private Thread th;
@@ -59,13 +55,9 @@ public class Game implements Runnable, Session.GameMessagesListener{
          this.p1.setGameMessageListener(this);
          this.p2.setGameMessageListener(this);
    
-         
-         
-         this.objectMapper = new ObjectMapper();
-         this.dbManager = DBManager.getInstance();
-         
          this.p1.setStatus(Player.STATUS_PLAYING);
          this.p2.setStatus(Player.STATUS_PLAYING);
+         
          sMan.refreshPlayerList();
          
          this.playersSymbols.put(p1, cellState.X.toString());
@@ -101,16 +93,21 @@ public class Game implements Runnable, Session.GameMessagesListener{
        
        if(this.p1 != null){
            this.p1.setGameMessageListener(null);
-           this.p1.setStatus(Player.STATUS_IDLE);
+           
+           if(this.p1.isStarted()){
+               this.p1.setStatus(Player.STATUS_IDLE);
+           }
        }
        
        if(this.p2 != null){
            this.p2.setGameMessageListener(null);
-           this.p2.setStatus(Player.STATUS_IDLE);
+           
+           if(this.p2.isStarted()){
+               this.p2.setStatus(Player.STATUS_IDLE);
+           }
        }
-        
-        
-         sMan.refreshPlayerList();
+        sMan.refreshPlayerList();
+         
    }
    
    public void run(){
@@ -182,14 +179,14 @@ public class Game implements Runnable, Session.GameMessagesListener{
     
      @Override
     public void onGameEnd(GamePlayer p) {
-       GamePlayer opponent = getOpponent(p);
-       
-       if(opponent.isStarted()){
-           opponent.setStatus(Player.STATUS_IDLE);
-           
-       }
-       sMan.refreshPlayerList();
+//       GamePlayer opponent = getOpponent(p);
+//       
+//       if(opponent.isStarted()){
+//           opponent.setStatus(Player.STATUS_IDLE);
+//           
+//       }
        stop();
+       
     }
     
     private boolean validateMove(int x , int y){
