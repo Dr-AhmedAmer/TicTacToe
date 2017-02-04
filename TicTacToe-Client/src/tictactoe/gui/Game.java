@@ -102,6 +102,8 @@ public class Game extends Application {
 	ImageView wait = new ImageView(new Image(getClass().getClassLoader().getResource("images/wait.gif").toString()));
 	Text responsetxt = new Text();
 	VBox reqvb = new VBox();
+	Button aiplay = new Button("Play with computer");
+
 	private SessionManager.GameControlListener gameControlListener = new SessionManager.GameControlListener() {
 		@Override
 		public void onGameRequest(int senderId) {
@@ -185,7 +187,7 @@ public class Game extends Application {
 				if (players == null) {
 					System.out.println("Empty");
 				} else {
-                                        listView.getItems().clear();
+					listView.getItems().clear();
 					genrateListView(players);
 					listView.setOnMouseClicked((MouseEvent event) -> {
 						if (event.getButton().equals(MouseButton.PRIMARY)) {
@@ -240,7 +242,7 @@ public class Game extends Application {
 				responsetxt.setFont(Font.font(responsetxt.getFont().toString(), FontWeight.BOLD, 60));
 				reqvb.setAlignment(Pos.CENTER);
 				if (winner.equals("Winner")) {
-					
+
 					responsetxt.setFill(Color.GREEN);
 				} else {
 					responsetxt.setFill(Color.RED);
@@ -278,7 +280,7 @@ public class Game extends Application {
 	public void setgMan(GameManager gMan) {
 		this.gMan = gMan;
 	}
-	
+
 	private void genrateListView(List<Player> players) {
 		ObservableList<Player> playerslist = FXCollections.observableArrayList(players);
 		playerslist.forEach(p -> {
@@ -295,15 +297,15 @@ public class Game extends Application {
 				} else {
 					HBox hBox = new HBox();
 					hBox.setSpacing(3);
-					VBox ptvb=new VBox();
+					VBox ptvb = new VBox();
 					ptvb.setAlignment(Pos.CENTER);
-					Text pt=new Text(String.valueOf(player.getPoints()));
+					Text pt = new Text(String.valueOf(player.getPoints()));
 					pt.setFont(Font.font(pt.getFont().toString(), FontWeight.BLACK, FontPosture.ITALIC, 10));
 					Text name = new Text(player.getDisplayName());
 					ImageView statusImageView = new ImageView();
 					Image statusImage = new Image(getClass().getClassLoader().getResource("images/" + player.getStatus() + ".png").toString(), 16, 16, true, true);
 					statusImageView.setImage(statusImage);
-					ptvb.getChildren().addAll(statusImageView,pt,name);
+					ptvb.getChildren().addAll(statusImageView, pt, name);
 					ImageView pictureImageView = new ImageView();
 					Image image = new Image(getClass().getClassLoader().getResource("images/avatars/" + player.getImage()).toString(), 50, 50, true, true);
 					pictureImageView.setImage(image);
@@ -538,13 +540,23 @@ public class Game extends Application {
 			vBox.getChildren().addAll(hBox, messeget);
 			chatList.getItems().add(vBox);
 		});
-		
-		
+
 		chatEmojBtn.setOnAction((event) -> {
-			EmojiUtil.showEmojiPopup(chatVbox, true, e->{
-				chatText.setText(chatText.getText()+e.getEmoji());
+			EmojiUtil.showEmojiPopup(chatVbox, true, e -> {
+				chatText.setText(chatText.getText() + e.getEmoji());
 			});
-	});
+		});
+
+		reqvb.getChildren().setAll(aiplay);
+		reqvb.setAlignment(Pos.CENTER);
+		rootstack.getChildren().add(reqvb);
+		aiplay.setOnAction((event) -> {
+			rootstack.getChildren().remove(reqvb);
+			rootstack.getChildren().add(wait);
+			sMan.sendAIInvite(player.getId());
+			sender = true;
+		});
+
 		Menu gamem = new Menu("_Game");
 		gamem.setMnemonicParsing(true);
 		MenuItem newItem = new MenuItem("New");
@@ -572,13 +584,13 @@ public class Game extends Application {
 	}
 
 	public Parent createShare() {
-		VBox container =new VBox();
+		VBox container = new VBox();
 		Platform.runLater(() -> {
 			Button facebook = new Button("Facebook", new ImageView(new Image(getClass().getClassLoader().getResource("images/fb.png").toString(), 20, 20, true, true)));
 			Button twitter = new Button("Twitter", new ImageView(new Image(getClass().getClassLoader().getResource("images/tw.png").toString(), 20, 20, true, true)));
 			HBox sharehb = new HBox();
 			sharehb.getChildren().addAll(facebook, twitter);
-			
+
 			WritableImage image = boardPane.snapshot(new SnapshotParameters(), null);
 			// TODO: probably use a file chooser here
 			File file = new File("chart.png");
@@ -588,13 +600,13 @@ public class Game extends Application {
 				// TODO: handle exception here
 			}
 			WebView browser = new WebView();
-			container.getChildren().addAll(browser,sharehb);
+			container.getChildren().addAll(browser, sharehb);
 			container.setAlignment(Pos.CENTER);
 			WebEngine webEngine = browser.getEngine();
 			facebook.setOnAction((event) -> {
-				webEngine.load("https://www.facebook.com/sharer/sharer.php?u="+getClass().getClassLoader().getResource("screenshots/chart.png").toString());
+				webEngine.load("https://www.facebook.com/sharer/sharer.php?u=" + getClass().getClassLoader().getResource("screenshots/chart.png").toString());
 			});
-			
+
 		});
 		return container;
 
@@ -606,7 +618,7 @@ public class Game extends Application {
 		sMan.setAuthListener(authListener);
 		gMan.setGameListener(gameListener);
 		sMan.setGameControlListener(gameControlListener);
-		
+
 		login = createLoginRoot();
 		primaryStage.setResizable(false);
 		primaryStage.setScene(login);
@@ -632,7 +644,7 @@ public class Game extends Application {
 			line.setStartY(combo.tiles[0].getCenterY());
 			line.setEndX(combo.tiles[0].getCenterX());
 			line.setEndY(combo.tiles[0].getCenterY());
-			
+
 			boardPane.getChildren().add(line);
 
 			Timeline timeline = new Timeline();
