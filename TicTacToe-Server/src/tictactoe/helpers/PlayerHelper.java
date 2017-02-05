@@ -45,4 +45,17 @@ public class PlayerHelper {
         return result;    
     }
     
+    public static ResultList<Player> getAllPlayers(){
+        
+        Session session = DBManager.getInstance().openSession();
+        Criteria cr = session.createCriteria(Player.class);
+        List results = cr.list();
+        
+        ResultList<Player> resultList = new ResultList<>();
+        resultList.setResults(results);
+        
+        return resultList;
+        
+    }
+    
 }
