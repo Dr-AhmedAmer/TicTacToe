@@ -20,13 +20,30 @@ public class Server implements Runnable{
     private boolean isStarted;
     private boolean isInitialized = false;
     private DBManager dBManager = DBManager.getInstance();
+    private static Server instance ;
             
-    public Server(int port){
+    private Server(int port){
         this.port = port;
        
     }
     
-    public void stop(){
+    public static void start (int port){
+        
+        if(instance == null){
+            instance = new Server(port);
+            instance.init();
+        }
+    }
+    
+    public static void stop (){
+        
+        if(instance != null){
+            instance.finailze();
+        }
+        
+    }
+    
+    private void finailze(){
        isStarted = false;
         try {
             this.serverSocket.close();
@@ -35,13 +52,15 @@ public class Server implements Runnable{
         }
     }
     
-    public void start(){
+    private void init(){
         if (!isStarted){
             this.th = new Thread(this);
             this.th.start();
             isStarted = true;
         }
     }
+    
+   
     
     public void run(){
         

@@ -3,9 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package serverGui;
+package tictactoe.gui;
 import java.util.List;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -29,45 +30,59 @@ import javafx.stage.Stage;
 import tictactoe.helpers.PlayerHelper;
 import tictactoe.helpers.ResultList;
 import tictactoe.models.Player;
-import tictactoe.server.TicTacToeServer;
+import tictactoe.network.Server;
+import tictactoe.network.SessionManager;
 
 /**
  *
  * @author lina
  */
-public class Smain extends Application {
+public class Smain extends Application implements SessionManager.PlayerStatusListener  {
     
     
     ListView<Player> listView = new ListView<>();
+    private SessionManager sMan = SessionManager.getInstance();
+    
 
     @Override
     public void start(Stage primaryStage) {
-        BorderPane root =new BorderPane();
-        Button btn = new Button();
-        btn.setText("start server");
-        btn.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                new TicTacToeServer();
-                
-                genrateListView(PlayerHelper.getAllPlayers().getResults());
-               // root.setMargin(listView, new Insets(50,100,50,100));
-               // root.setCenter(listView);
-            }
-        });
+        
+        sMan.setPlayerStatusListener(this);
         Label lport =new Label("Port");
-        Label lip =new Label("IP");
-        TextField ip= new TextField();
         TextField port= new TextField();
         VBox vboxin = new VBox(10);
         vboxin.minHeight(80);
          
         VBox vbox = new VBox(10);
         
-        vbox.getChildren().addAll(lport,port,lip,ip,vboxin,btn);
+        BorderPane root =new BorderPane();
+        Button btn = new Button();
+        btn.setText("start server");
+        
+        vbox.getChildren().addAll(lport,port,vboxin,btn);
         root.setMargin(vbox, new Insets(80,100,0,100));
         
-       root.setCenter(vbox);
+        root.setCenter(vbox);
+        
+        
+        
+        
+        btn.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+               Server.start(Integer.parseInt(port.getText()));
+                Platform.runLater(() -> {
+                    
+                genrateListView(PlayerHelper.getAllPlayers().getResults());
+                root.setMargin(listView, new Insets(50,100,50,100));
+                root.setCenter(listView);
+                    
+                    
+                });
+            
+            }
+        });
+        
         
         Scene scene = new Scene(root, 400, 500);
         
@@ -79,6 +94,7 @@ public class Smain extends Application {
     
     
     private void genrateListView(List<Player> players) {
+                listView.getItems().clear();
 		ObservableList<Player> playerslist = FXCollections.observableArrayList(players);
 		playerslist.forEach(p -> {
 			listView.getItems().add(p);
@@ -88,7 +104,9 @@ public class Smain extends Application {
 
 			@Override
 			public void updateItem(Player player, boolean empty) {
-				super.updateItem(player, empty);
+                            
+                            Platform.runLater(() -> {
+                                super.updateItem(player, empty);
 				if (empty) {
 					setText(null);
 					setGraphic(null);
@@ -98,19 +116,19 @@ public class Smain extends Application {
 					Text name = new Text(player.getDisplayName());
 
 					ImageView statusImageView = new ImageView();
-					//Image statusImage = new Image(getClass().getClassLoader().getResource("images/" + player.getStatus() + ".png").toString(), 16, 16, true, true);
-					//statusImageView.setImage(statusImage);
+					Image statusImage = new Image(getClass().getClassLoader().getResource("images/" + player.getStatus() + ".png").toString(), 16, 16, true, true);
+					statusImageView.setImage(statusImage);
 
-					ImageView pictureImageView = new ImageView();
-					//Image image = new Image(getClass().getClassLoader().getResource("images/avatars/" + player.getImage()).toString(), 50, 50, true, true);
-					//pictureImageView.setImage(image);
 
-					hBox.getChildren().addAll(/*pictureImageView, statusImageView,*/ name);
+					hBox.getChildren().addAll( statusImageView, name);
 					hBox.setAlignment(Pos.CENTER_LEFT);
 
 					setGraphic(hBox);
 
 				}
+                                
+                            });
+				
 			}
 		});
 	}
@@ -120,6 +138,12 @@ public class Smain extends Application {
      */
     public static void main(String[] args) {
         launch(args);
+    }
+
+    @Override
+    public void onPlayerStatusChange(List<Player> list) {
+        System.out.println("onPlayerStatusChange Called");
+        this.genrateListView(list);
     }
     
 }

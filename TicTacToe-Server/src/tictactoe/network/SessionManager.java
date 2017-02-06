@@ -17,7 +17,14 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 public class SessionManager{
     
+    public interface PlayerStatusListener{
+        
+        public void onPlayerStatusChange(List<Player> list);
+    } 
+    
     private static SessionManager instance;
+    
+    private PlayerStatusListener playerStatusListener;
     
     private HashMap<Integer, Session> sessions;
     private ObjectMapper objectMapper;
@@ -73,6 +80,26 @@ public class SessionManager{
             }
             
         }
+        onPlayerStatusChange();
+    }
+    
+    public void onPlayerStatusChange(){
+        List <Player> resultList = null;
+        
+        for (Map.Entry pair : sessions.entrySet()) {
+            Session s =(Session) pair.getValue();
+             resultList = PlayerHelper.getAllPlayers().getResults();
+        }
+        
+        if(this.playerStatusListener != null && resultList != null){
+            
+            this.playerStatusListener.onPlayerStatusChange(resultList);
+        }
+    }
+    
+    public void setPlayerStatusListener(PlayerStatusListener listener)
+    {
+        this.playerStatusListener = listener;
     }
     
 }
