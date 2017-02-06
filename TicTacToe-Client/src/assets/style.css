@@ -7,41 +7,91 @@ and open the template in the editor.
     Created on : Feb 4, 2017, 6:10:17 AM
     Author     : salamaashoush
 */
-
-@font-face {
-    font-family: 'OpenSansEmoji';
-    src: url('OpenSansEmoji.ttf');
+.button-raised{
+    -fx-padding: 0.7em 0.57em;
+    -fx-font-size: 14px;
+    -fx-button-type: RAISED;
+    -fx-background-color: rgb(77,102,204);
+    -fx-pref-width: 200;
+    -fx-text-fill: WHITE;
+}
+/*.root{
+    -fx-background-color: #262626;
+}*/
+.text-field{
+    -fx-padding: 0.5em 0.5em;
+    -fx-font-size: 14px;
+    -fx-pref-width: 200;
 }
 
-.text-field {
-    -fx-font-family: OpenSansEmoji;
-    -fx-font-size: 32;
+.label{
+    -fx-font-size: 10px;
 }
-.emoji-button {
-    -fx-font-family: OpenSansEmoji;
-    -fx-font-size: 24;
-    -fx-background-color: transparent;
-    -fx-border-color: transparent;
+.lblMessage{
+    -fx-text-fill: red;
+    -fx-font-size: 18px
+}
+.combo-box{
+     -fx-pref-width: 200;  
+}
+/*.combo-box .cell{
+    -fx-text-fill: whitesmoke;
+}
+.combo-box *{
+    -fx-text-fill: whitesmoke;
+}*/
+.combo-box-popup > .list-view {
+    -fx-pref-width: 200;
+/*    -fx-control-inner-background: #262626 ;*/
+}
+.mylistview .scroll-bar:horizontal .track,
+.mylistview .scroll-bar:vertical .track{
+    -fx-background-color:transparent;
+    -fx-border-color:transparent;
+    -fx-background-radius: 0em;
+    -fx-border-radius:2em;
+}
+ 
+.mylistview .scroll-bar:horizontal .increment-button ,
+.mylistview .scroll-bar:horizontal .decrement-button {
+    -fx-background-color:transparent;
+    -fx-background-radius: 0em;
+    -fx-padding:0 0 10 0;
+}
+ 
+.mylistview .scroll-bar:vertical .increment-button ,
+.mylistview .scroll-bar:vertical .decrement-button {
+    -fx-background-color:transparent;
+    -fx-background-radius: 0em;
+    -fx-padding:0 10 0 0;
+}
+.mylistview  .scroll-bar .increment-arrow,
+.mylistview  .scroll-bar .decrement-arrow{
+    -fx-shape:" ";  
+    -fx-padding:0;
+}
+ 
+.mylistview .scroll-bar:horizontal .thumb,
+.mylistview .scroll-bar:vertical .thumb {
+    -fx-background-color:derive(black,90%);
+    -fx-background-insets: 2, 0, 0;
+    -fx-background-radius: 2em;
 }
 
-.emoji-button:hover {
-    -fx-text-fill: deepskyblue;
+/*.list-view {
+    -fx-control-inner-background: #262626 ; 
+    -fx-border-color:black ;  
+    -fx-border-width: 2px ; 
 }
-
-.emoji-pane {
-    -fx-padding: 6;
-    -fx-background-color: lightgray;
-    -fx-border-color: darkgrey;
+.tile{
+     -fx-background: #262626 ;
 }
-.iconified-button {
-    -fx-skin: "com.guigarage.controls.IconifiedButtonSkin";
-    -fx-font-family: FontAwesome !important;
-    -fx-background-color: transparent;
-    -fx-border-color: transparent;
-    -fx-border-width: 0;
-    -fx-padding: 0;
-}
-
-.iconified-button .text {
-    -fx-font-family: FontAwesome !important;
-}
+.scroll-pane{
+    -fx-border-color:black ;  
+    -fx-border-width: 2px ; 
+    -fx-background: #262626 ;
+}*/
+/*.list-cell {
+    -fx-control-inner-background:#262626 ;
+    -fx-control-inner-background-alt: derive(-fx-control-inner-background, 30%);
+}*/
