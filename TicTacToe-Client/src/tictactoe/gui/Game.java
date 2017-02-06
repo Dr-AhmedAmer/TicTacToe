@@ -3,12 +3,8 @@ package tictactoe.gui;
 import java.awt.Container;
 import java.io.File;
 import tictactoe.emoji.*;
-
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.animation.KeyFrame;
@@ -18,35 +14,21 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.embed.swing.SwingFXUtils;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Hyperlink;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.PasswordField;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -62,12 +44,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
-import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import javax.imageio.ImageIO;
 import tictactoe.client.game.GameManager;
 import tictactoe.client.network.SessionManager;
 import tictactoe.models.Player;
@@ -97,21 +75,29 @@ public class Game extends Application {
 	Stage thestage;
 	String user;
 	String pw;
+	int opponentId;
 	Label lblMessage = new Label();
 	StackPane rootstack = new StackPane();
 	ImageView wait = new ImageView(new Image(getClass().getClassLoader().getResource("images/wait.gif").toString()));
 	Text responsetxt = new Text();
 	VBox reqvb = new VBox();
 	Button aiplay = new Button("Play with computer");
-
+	Button playagain = new Button("Play Again");
+	Line line = new Line();
+	ComboBox filter = new ComboBox();
+	HBox chatHbox = new HBox();
 	private SessionManager.GameControlListener gameControlListener = new SessionManager.GameControlListener() {
 		@Override
 		public void onGameRequest(int senderId) {
 			Platform.runLater(() -> {
+				opponentId = senderId;
 				Button accept = new Button("Accept", new ImageView(new Image(getClass().getClassLoader().getResource("images/ok.png").toString(), 50, 50, true, true)));
 				Button reject = new Button("Reject", new ImageView(new Image(getClass().getClassLoader().getResource("images/not.png").toString(), 50, 50, true, true)));
 				reject.setPrefWidth(200);
 				accept.setPrefWidth(200);
+				if (rootstack.getChildren().indexOf(reqvb) != -1) {
+					rootstack.getChildren().remove(reqvb);
+				};
 
 				reqvb.getChildren().setAll(accept, reject);
 				reqvb.setAlignment(Pos.CENTER);
@@ -119,6 +105,7 @@ public class Game extends Application {
 				accept.setOnAction((event) -> {
 					try {
 						sMan.sendResponse(senderId, 0);
+						resetGame();
 						Thread.sleep(500);
 						rootstack.getChildren().remove(reqvb);
 					} catch (InterruptedException ex) {
@@ -145,13 +132,15 @@ public class Game extends Application {
 				responsetxt.setFont(Font.font(responsetxt.getFont().toString(), FontWeight.BOLD, 24));
 				reqvb.setAlignment(Pos.CENTER);
 				reqvb.getChildren().setAll(responsetxt);
+				if (rootstack.getChildren().indexOf(reqvb) != -1) {
+					rootstack.getChildren().remove(reqvb);
+				};
 				if (response == 0) {
 					if (sender) {
 						rootstack.getChildren().remove(wait);
 						responsetxt.setText("Player Accepted");
 						responsetxt.setFill(Color.GREEN);
 						rootstack.getChildren().add(reqvb);
-
 						reqvb.setOnMouseClicked((event) -> {
 							rootstack.getChildren().remove(reqvb);
 						});
@@ -193,9 +182,12 @@ public class Game extends Application {
 						if (event.getButton().equals(MouseButton.PRIMARY)) {
 							if (event.getClickCount() == 2) {
 								sMan.sendInvite(listView.getSelectionModel().getSelectedItem().getId());
+								if (rootstack.getChildren().indexOf(reqvb) != -1) {
+									rootstack.getChildren().remove(reqvb);
+								};
 								rootstack.getChildren().add(wait);
 								sender = true;
-
+								resetGame();
 							}
 						}
 					});
@@ -213,6 +205,7 @@ public class Game extends Application {
 			Platform.runLater(() -> {
 				player = p;
 				game = createGameRoot();
+
 //				game.getStylesheets().add(getClass().getClassLoader().getResource("style.css").toExternalForm());
 				thestage.setScene(game);
 
@@ -241,15 +234,25 @@ public class Game extends Application {
 			Platform.runLater(() -> {
 				responsetxt.setFont(Font.font(responsetxt.getFont().toString(), FontWeight.BOLD, 60));
 				reqvb.setAlignment(Pos.CENTER);
+				playagain.setOnAction((event) -> {
+					if (opponentId == 0) {
+						sMan.sendAIInvite(player.getId());
+					} else {
+						sMan.sendInvite(opponentId);
+					}
+					resetGame();
+					rootstack.getChildren().remove(reqvb);
+				});
 				if (winner.equals("Winner")) {
-
 					responsetxt.setFill(Color.GREEN);
 				} else {
 					responsetxt.setFill(Color.RED);
 				}
 				responsetxt.setText(winner);
-				reqvb.getChildren().setAll(responsetxt);
+				reqvb.getChildren().setAll(responsetxt, playagain);
 				rootstack.getChildren().add(reqvb);
+				sender = false;
+				chatHbox.setDisable(true);
 			});
 
 		}
@@ -281,11 +284,56 @@ public class Game extends Application {
 		this.gMan = gMan;
 	}
 
+	
+
 	private void genrateListView(List<Player> players) {
 		ObservableList<Player> playerslist = FXCollections.observableArrayList(players);
-		playerslist.forEach(p -> {
-			listView.getItems().add(p);
+		filter.setOnAction((event) -> {
+			switch (filter.getSelectionModel().getSelectedItem().toString()) {
+				case "Online":
+					listView.getItems().clear();
+					playerslist.filtered((p) -> p.getStatus().equals("onlin") || p.getStatus().equals("idle")).forEach((p) -> {
+						listView.getItems().add(p);
+					});
+					break;
+				case "Offline":
+					listView.getItems().clear();
+					playerslist.filtered((p) -> p.getStatus().equals("offln")).forEach((p) -> {
+						listView.getItems().add(p);
+					});
+					break;
+				case "All":
+					listView.getItems().clear();
+					playerslist.forEach(p -> {
+						listView.getItems().add(p);
+					});
+					break;
+				default:
+					break;
+			}
 		});
+		switch (filter.getSelectionModel().getSelectedItem().toString()) {
+				case "Online":
+					listView.getItems().clear();
+					playerslist.filtered((p) -> p.getStatus().equals("onlin") || p.getStatus().equals("idle")).forEach((p) -> {
+						listView.getItems().add(p);
+					});
+					break;
+				case "Offline":
+					listView.getItems().clear();
+					playerslist.filtered((p) -> p.getStatus().equals("offln")).forEach((p) -> {
+						listView.getItems().add(p);
+					});
+					break;
+				case "All":
+					listView.getItems().clear();
+					playerslist.forEach(p -> {
+						listView.getItems().add(p);
+					});
+					break;
+				default:
+					break;
+			}
 
 		listView.setCellFactory(parm -> new ListCell<Player>() {
 			@Override
@@ -494,16 +542,17 @@ public class Game extends Application {
 		combos.add(new Combo(board[2][0], board[1][1], board[0][2]));
 
 		listView.setPrefWidth(200);
-		boardPane.getChildren().add(listView);
 
 		VBox chatVbox = new VBox();
-		HBox chatHbox = new HBox();
 		chatHbox.setPrefSize(450, 30);
 
 		chatText.setPrefSize(350, 30);
 
 		chatSend.setPrefWidth(70);
 		chatSend.setPrefHeight(Double.MAX_VALUE);
+
+		filter.getItems().setAll("Online", "Offline", "All");
+		filter.getSelectionModel().selectFirst();
 
 		chatEmojBtn.setPrefWidth(30);
 		chatEmojBtn.setPrefHeight(Double.MAX_VALUE);
@@ -517,6 +566,12 @@ public class Game extends Application {
 		chatScroll.setContent(chatList);
 		chatList.setPrefSize(600, 150);
 
+		chatHbox.setDisable(true);
+		VBox playersvb = new VBox();
+		filter.setPrefWidth(200);
+		playersvb.setPrefWidth(200);
+		aiplay.setPrefWidth(200);
+		playersvb.getChildren().addAll(filter, listView, aiplay);
 		rootstack.getChildren().add(boardPane);
 		rootstack.setAlignment(Pos.CENTER);
 		chatVbox.getChildren().addAll(rootstack, chatScroll, chatHbox);
@@ -546,70 +601,31 @@ public class Game extends Application {
 				chatText.setText(chatText.getText() + e.getEmoji());
 			});
 		});
-
-		reqvb.getChildren().setAll(aiplay);
-		reqvb.setAlignment(Pos.CENTER);
-		rootstack.getChildren().add(reqvb);
 		aiplay.setOnAction((event) -> {
 			rootstack.getChildren().remove(reqvb);
 			rootstack.getChildren().add(wait);
 			sMan.sendAIInvite(player.getId());
+			opponentId = 0;
+			resetGame();
 			sender = true;
+			chatHbox.setDisable(false);
 		});
 
-		Menu gamem = new Menu("_Game");
-		gamem.setMnemonicParsing(true);
-		MenuItem newItem = new MenuItem("New");
-		MenuItem openItem = new MenuItem("Open");
-		MenuItem saveItem = new MenuItem("Save");
-		MenuItem exitItem = new MenuItem("Exit");
-		gamem.getItems().addAll(newItem, openItem, saveItem, new SeparatorMenuItem(), exitItem);
-
-		Menu playerm = new Menu("_Player");
-		gamem.setMnemonicParsing(true);
-		MenuItem registerItem = new MenuItem("Register");
-		MenuItem signItem = new MenuItem("Signin");
-		MenuItem listItem = new MenuItem("List");
-		MenuItem chatItem = new MenuItem("Chat");
-		playerm.getItems().addAll(registerItem, signItem, listItem, chatItem);
-
-		MenuBar bar = new MenuBar();
-		bar.getMenus().addAll(gamem, playerm);
-		bar.setPrefHeight(20);
-
-		root.setTop(bar);
 		root.setCenter(chatVbox);
-		root.setRight(listView);
+		root.setRight(playersvb);
 		return new Scene(root, 650, 650);
 	}
 
-	public Parent createShare() {
-		VBox container = new VBox();
-		Platform.runLater(() -> {
-			Button facebook = new Button("Facebook", new ImageView(new Image(getClass().getClassLoader().getResource("images/fb.png").toString(), 20, 20, true, true)));
-			Button twitter = new Button("Twitter", new ImageView(new Image(getClass().getClassLoader().getResource("images/tw.png").toString(), 20, 20, true, true)));
-			HBox sharehb = new HBox();
-			sharehb.getChildren().addAll(facebook, twitter);
+	public void resetGame() {
 
-			WritableImage image = boardPane.snapshot(new SnapshotParameters(), null);
-			// TODO: probably use a file chooser here
-			File file = new File("chart.png");
-			try {
-				ImageIO.write(SwingFXUtils.fromFXImage(image, null), "png", file);
-			} catch (IOException e) {
-				// TODO: handle exception here
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				board[j][i].clear();
 			}
-			WebView browser = new WebView();
-			container.getChildren().addAll(browser, sharehb);
-			container.setAlignment(Pos.CENTER);
-			WebEngine webEngine = browser.getEngine();
-			facebook.setOnAction((event) -> {
-				webEngine.load("https://www.facebook.com/sharer/sharer.php?u=" + getClass().getClassLoader().getResource("screenshots/chart.png").toString());
-			});
-
-		});
-		return container;
-
+		}
+		boardPane.getChildren().remove(line);
+		playable = true;
+		chatHbox.setDisable(false);
 	}
 
 	@Override
@@ -637,7 +653,7 @@ public class Game extends Application {
 
 	private void playWinAnimation(Combo combo) {
 		Platform.runLater(() -> {
-			Line line = new Line();
+
 			line.setFill(playerColor);
 			line.setStrokeWidth(5);
 			line.setStartX(combo.tiles[0].getCenterX());
@@ -712,7 +728,7 @@ public class Game extends Application {
 				}
 
 				if (event.getButton() == MouseButton.PRIMARY) {
-					if (yourTurn) {
+					if (yourTurn && this.text.getText().isEmpty()) {
 						drawMove(playerSymbol);
 						checkState();
 						gMan.move(this.x, this.y);
@@ -734,6 +750,10 @@ public class Game extends Application {
 
 		public String getValue() {
 			return text.getText();
+		}
+
+		public void clear() {
+			text.setText("");
 		}
 
 		private void drawMove(String turn) {
