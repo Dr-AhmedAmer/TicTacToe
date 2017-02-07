@@ -66,6 +66,8 @@ public class SessionManager{
 
     
     public void refreshPlayerList() {
+        onPlayerStatusChange();
+        
         for (Map.Entry pair : sessions.entrySet()) {
             Session s =(Session) pair.getValue();
             System.out.println("tictactoe.network.SessionManager.onPlayerLog()");
@@ -80,7 +82,7 @@ public class SessionManager{
             }
             
         }
-        onPlayerStatusChange();
+        
     }
     
     public void onPlayerStatusChange(){
@@ -91,7 +93,7 @@ public class SessionManager{
              resultList = PlayerHelper.getAllPlayers().getResults();
         }
         
-        if(this.playerStatusListener != null && resultList != null){
+        if(this.playerStatusListener != null ){
             
             this.playerStatusListener.onPlayerStatusChange(resultList);
         }

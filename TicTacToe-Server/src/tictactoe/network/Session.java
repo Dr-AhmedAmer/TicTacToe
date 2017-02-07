@@ -354,10 +354,13 @@ public class Session implements Runnable{
                 
                 System.out.println("client dropped");
                 
+                
+                
             }
         }
         
         System.out.println("Session closed");
+
     }
     
 }

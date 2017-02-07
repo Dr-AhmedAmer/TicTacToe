@@ -76,6 +76,18 @@ public class Smain extends Application implements SessionManager.PlayerStatusLis
                 genrateListView(PlayerHelper.getAllPlayers().getResults());
                 root.setMargin(listView, new Insets(50,100,50,100));
                 root.setCenter(listView);
+                Button stop = new Button();
+                stop.setText("Stop server");
+                stop.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent event) {
+                        Server.stop();
+                        Platform.exit();
+                        System.exit(0);
+                    }
+                });
+                root.setAlignment(stop, Pos.CENTER);
+                root.setBottom(stop);
                     
                     
                 });
@@ -143,7 +155,13 @@ public class Smain extends Application implements SessionManager.PlayerStatusLis
     @Override
     public void onPlayerStatusChange(List<Player> list) {
         System.out.println("onPlayerStatusChange Called");
-        this.genrateListView(list);
+        
+        if(list != null){
+            this.genrateListView(list);
+        }else{
+            list = PlayerHelper.getAllPlayers().getResults();
+            this.genrateListView(list);
+        }
     }
     
 }
