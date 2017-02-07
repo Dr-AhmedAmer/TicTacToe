@@ -5,6 +5,8 @@ import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXListView;
 import com.jfoenix.controls.JFXPasswordField;
 import com.jfoenix.controls.JFXPopup;
+import com.jfoenix.controls.JFXPopup.PopupHPosition;
+import com.jfoenix.controls.JFXPopup.PopupVPosition;
 import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.validation.RequiredFieldValidator;
@@ -29,6 +31,7 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
@@ -45,6 +48,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -54,6 +58,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javax.imageio.ImageIO;
@@ -191,24 +196,42 @@ public class Game extends Application {
 				} else {
 					listView.getItems().clear();
 					genrateListView(players);
-
+					Popup playerpop = new Popup();
+					Label ptext = new Label("Sory player is offline,\nbut you can play with computer");
+					ptext.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.WARNING));
+					JFXButton ok =new JFXButton("ok");
+					JFXButton no =new JFXButton("no");
+					ok.getStyleClass().add("button-raised");
+					no.getStyleClass().add("button-raised-red");
+					ok.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.THUMBS_UP));
+					no.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.THUMBS_DOWN));
+					HBox btnhb=new HBox(ok,no);
+					btnhb.setSpacing(10);
+					btnhb.setAlignment(Pos.CENTER);
+					VBox vbc = new VBox(ptext,btnhb);
+					vbc.setAlignment(Pos.CENTER);
+					vbc.setId("pop");
+					playerpop.getContent().add(vbc);
+					ok.setOnAction((event) -> {
+						sMan.sendAIInvite(player.getId());
+						playerpop.hide();
+					});
+					no.setOnAction((event) -> {
+						playerpop.hide();
+					});
 					listView.setOnMouseClicked((MouseEvent event) -> {
 						if (event.getButton().equals(MouseButton.PRIMARY)) {
 							if (event.getClickCount() == 2) {
 								if (listView.getSelectionModel().getSelectedItem().getStatus().equals("onlin")) {
 									sMan.sendInvite(listView.getSelectionModel().getSelectedItem().getId());
+									if (rootstack.getChildren().indexOf(reqvb) != -1) {
+										rootstack.getChildren().remove(reqvb);
+									}
+									rootstack.getChildren().add(wait);
 								} else {
-									JFXPopup playerpop = new JFXPopup();
-									Text ptext = new Text("Sory player is offline");
-									playerpop.getChildren().add(ptext);
-									playerpop.show(JFXPopup.PopupVPosition.TOP, JFXPopup.PopupHPosition.RIGHT);
-
+									playerpop.show(thestage);
 								}
 
-								if (rootstack.getChildren().indexOf(reqvb) != -1) {
-									rootstack.getChildren().remove(reqvb);
-								};
-								rootstack.getChildren().add(wait);
 								sender = true;
 								resetGame();
 							}
@@ -274,6 +297,7 @@ public class Game extends Application {
 				}
 				responsetxt.setText(winner);
 				reqvb.getChildren().setAll(responsetxt, playagain, createShare());
+				reqvb.setOnMouseClicked(null);
 				rootstack.getChildren().add(reqvb);
 				sender = false;
 				chatHbox.setDisable(true);
@@ -476,15 +500,19 @@ public class Game extends Application {
 		gridPane.setVgap(5);
 
 		//Implementing Nodes for GridPane
-		Label lblUserName = new Label("Username");
 		JFXTextField txtUserName = new JFXTextField();
-		Label lblEmail = new Label("Email");
 		JFXTextField txtEmail = new JFXTextField();
-
-		Label lblPassword = new Label("Password");
-		PasswordField pf = new PasswordField();
+		JFXPasswordField pf = new JFXPasswordField();
 		JFXButton btnReg = new JFXButton("Register");
+		JFXButton btnback = new JFXButton("Back");
+		btnback.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.HOME));
+		btnReg.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SIGN_IN));
+
 		btnReg.setMaxWidth(Double.MAX_VALUE);
+		btnback.setMaxWidth(Double.MAX_VALUE);
+
+		btnReg.getStyleClass().add("button-raised");
+		btnback.getStyleClass().add("button-raised");
 		JFXListView<String> avatarsList = new JFXListView<>();
 		avatarsList.setOrientation(Orientation.HORIZONTAL);
 		avatarsList.setPrefSize(290, 30);
@@ -514,16 +542,55 @@ public class Game extends Application {
 				avatar = avatarsList.getSelectionModel().getSelectedItem();
 			}
 		});
+
+		txtEmail.setPromptText("Email");
+		pf.setPromptText("Password");
+		txtUserName.setPromptText("User Name");
 		//Adding Nodes to GridPane layout
-		gridPane.add(lblUserName, 0, 0);
-		gridPane.add(txtUserName, 1, 0);
-		gridPane.add(lblEmail, 0, 1);
-		gridPane.add(txtEmail, 1, 1);
-		gridPane.add(lblPassword, 0, 2);
-		gridPane.add(pf, 1, 2);
-		gridPane.add(avatarsList, 0, 3, 2, 2);
-		gridPane.add(btnReg, 0, 5, 2, 2);
-		gridPane.add(lblMessage, 0, 7, 2, 2);
+		gridPane.add(txtUserName, 0, 0, 2, 2);
+		gridPane.add(txtEmail, 0, 4, 2, 2);
+		gridPane.add(pf, 0, 8, 2, 2);
+		gridPane.add(avatarsList, 0, 12, 2, 2);
+		gridPane.add(btnReg, 0, 14, 2, 2);
+		gridPane.add(btnback, 0, 16, 2, 2);
+		gridPane.add(lblMessage, 0, 18, 2, 2);
+
+		RequiredFieldValidator pfvalidator = new RequiredFieldValidator();
+		pfvalidator.setMessage("Input Required");
+		pfvalidator.setIcon(new FontAwesomeIconView(FontAwesomeIcon.WARNING));
+		pf.getValidators().add(pfvalidator);
+		pf.focusedProperty().addListener((o, oldVal, newVal) -> {
+			if (!newVal) {
+				txtUserName.resetValidation();
+				txtEmail.resetValidation();
+				pf.validate();
+			}
+		});
+		RequiredFieldValidator usrvalidator = new RequiredFieldValidator();
+		usrvalidator.setMessage("Input Required");
+		usrvalidator.setIcon(new FontAwesomeIconView(FontAwesomeIcon.WARNING));
+		txtUserName.getValidators().add(usrvalidator);
+		txtUserName.focusedProperty().addListener((o, oldVal, newVal) -> {
+
+			if (!newVal) {
+				txtUserName.validate();
+				txtEmail.resetValidation();
+				pf.resetValidation();
+			}
+
+		});
+
+		RequiredFieldValidator mailvalidator = new RequiredFieldValidator();
+		mailvalidator.setMessage("Input Required");
+		mailvalidator.setIcon(new FontAwesomeIconView(FontAwesomeIcon.WARNING));
+		txtEmail.getValidators().add(mailvalidator);
+		txtEmail.focusedProperty().addListener((o, oldVal, newVal) -> {
+			if (!newVal) {
+				txtEmail.validate();
+				txtUserName.resetValidation();
+				pf.resetValidation();
+			}
+		});
 		txtEmail.focusedProperty().addListener((arg0, oldValue, newValue) -> {
 			if (!newValue) {
 				if (!txtEmail.getText().matches("[A-Za-z0-9._%-]+\\@[A-Za-z]+\\.[A-Za-z]+.")) {
@@ -582,7 +649,7 @@ public class Game extends Application {
 		combos.add(new Combo(board[0][0], board[1][1], board[2][2]));
 		combos.add(new Combo(board[2][0], board[1][1], board[0][2]));
 
-		listView.setPrefSize(200, 450);
+		listView.setPrefSize(200, 425);
 
 		VBox chatVbox = new VBox();
 		chatHbox.setPrefSize(450, 30);
@@ -593,7 +660,7 @@ public class Game extends Application {
 		chatSend.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SEND));
 		chatEmojBtn.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SMILE_ALT));
 		chatSend.setPrefHeight(Double.MAX_VALUE);
-		
+
 		filter.getItems().setAll("Online", "Offline", "All");
 		filter.getSelectionModel().selectFirst();
 		filter.setPrefWidth(200);
