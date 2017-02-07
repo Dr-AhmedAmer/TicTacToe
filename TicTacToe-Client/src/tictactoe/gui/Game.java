@@ -116,7 +116,9 @@ public class Game extends Application {
 				yesNoPopup(requestpop, "Player sends you request\nWhat you gonna do?",
 						"Accept", "Reject",
 						(event) -> {
+							System.out.println(senderId);
 							sMan.sendResponse(senderId, 0);
+							System.out.println(".onGameRequest()");
 							resetGame();
 							requestpop.hide();
 						},
@@ -134,7 +136,6 @@ public class Game extends Application {
 			Platform.runLater(() -> {
 				responsetxt.setFont(Font.font(responsetxt.getFont().toString(), FontWeight.BOLD, 24));
 				Popup notify = notifyPopup(responsetxt);
-				if (sender) {
 					if (response == 0) {
 						rootstack.getChildren().remove(wait);
 						responsetxt.setText("Player Accepted");
@@ -154,6 +155,7 @@ public class Game extends Application {
 						responsetxt.setText("Player Rejected");
 
 					}
+				if (sender) {
 					notify.show(thestage, thestage.getX() + 100, thestage.getY() + 200);
 				}
 			});
@@ -190,16 +192,17 @@ public class Game extends Application {
 						if (event.getButton().equals(MouseButton.PRIMARY)) {
 							if (event.getClickCount() == 2) {
 								if (listView.getSelectionModel().getSelectedItem().getStatus().equals("idle")) {
-									sMan.sendInvite(listView.getSelectionModel().getSelectedItem().getId());
 									rootstack.getChildren().add(wait);
-								} else if (listView.getSelectionModel().getSelectedItem().getStatus().equals("play")) {
+									sMan.sendInvite(listView.getSelectionModel().getSelectedItem().getId());
+									sender = true;
+									resetGame();
+
+								}else if (listView.getSelectionModel().getSelectedItem().getStatus().equals("play")) {
 									playPop.show(thestage, thestage.getX() + 100, thestage.getY() + 200);
-								} else if (listView.getSelectionModel().getSelectedItem().getStatus().equals("offln")) {
+								}else if (listView.getSelectionModel().getSelectedItem().getStatus().equals("offln")) {
 									oflinPop.show(thestage, thestage.getX() + 100, thestage.getY() + 200);
 								}
 
-								sender = true;
-								resetGame();
 							}
 						}
 					});
