@@ -28,6 +28,8 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -39,6 +41,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
@@ -109,38 +112,20 @@ public class Game extends Application {
 		public void onGameRequest(int senderId) {
 			Platform.runLater(() -> {
 				opponentId = senderId;
-				JFXButton accept = new JFXButton("Accept", new ImageView(new Image(getClass().getClassLoader().getResource("images/ok.png").toString(), 50, 50, true, true)));
-				JFXButton reject = new JFXButton("Reject", new ImageView(new Image(getClass().getClassLoader().getResource("images/not.png").toString(), 50, 50, true, true)));
-				reject.setPrefWidth(200);
-				accept.setPrefWidth(200);
-				if (rootstack.getChildren().indexOf(reqvb) != -1) {
-					rootstack.getChildren().remove(reqvb);
-				};
-
-				reqvb.getChildren().setAll(accept, reject);
-				reqvb.setAlignment(Pos.CENTER);
-				rootstack.getChildren().add(reqvb);
-				accept.setOnAction((event) -> {
-					try {
-						sMan.sendResponse(senderId, 0);
-						resetGame();
-						Thread.sleep(500);
-						rootstack.getChildren().remove(reqvb);
-					} catch (InterruptedException ex) {
-						Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
-					}
-				});
-				reject.setOnAction((event) -> {
-					try {
-						sMan.sendResponse(senderId, 1);
-						Thread.sleep(500);
-						rootstack.getChildren().remove(reqvb);
-					} catch (InterruptedException ex) {
-						Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
-					}
-				});
+				Popup requestpop = new Popup();
+				yesNoPopup(requestpop, "Player sends you request\nWhat you gonna do?",
+						"Accept", "Reject",
+						(event) -> {
+							sMan.sendResponse(senderId, 0);
+							resetGame();
+							requestpop.hide();
+						},
+						(event) -> {
+							sMan.sendResponse(senderId, 1);
+							requestpop.hide();
+						});
+				requestpop.show(thestage, thestage.getX() + 100, thestage.getY() + 200);
 			});
-
 		}
 
 		@Override
@@ -148,43 +133,30 @@ public class Game extends Application {
 
 			Platform.runLater(() -> {
 				responsetxt.setFont(Font.font(responsetxt.getFont().toString(), FontWeight.BOLD, 24));
-				reqvb.setAlignment(Pos.CENTER);
-				reqvb.getChildren().setAll(responsetxt);
-				if (rootstack.getChildren().indexOf(reqvb) != -1) {
-					rootstack.getChildren().remove(reqvb);
-				};
-				if (response == 0) {
-					if (sender) {
+				Popup notify = notifyPopup(responsetxt);
+				if (sender) {
+					if (response == 0) {
 						rootstack.getChildren().remove(wait);
 						responsetxt.setText("Player Accepted");
 						responsetxt.setFill(Color.GREEN);
-						rootstack.getChildren().add(reqvb);
-						reqvb.setOnMouseClicked((event) -> {
-							rootstack.getChildren().remove(reqvb);
-						});
-					}
-					if (symbol.equals("X")) {
-						yourTurn = true;
-						opponentSymbol = "O";
-					} else {
-						opponentSymbol = "X";
-					}
-					playerSymbol = symbol;
-					gMan.startGame();
+						if (symbol.equals("X")) {
+							yourTurn = true;
+							opponentSymbol = "O";
+						} else {
+							opponentSymbol = "X";
+						}
+						playerSymbol = symbol;
+						gMan.startGame();
 
-				} else {
-					if (sender) {
+					} else {
 						rootstack.getChildren().remove(wait);
 						responsetxt.setFill(Color.RED);
 						responsetxt.setText("Player Rejected");
-						reqvb.setOnMouseClicked((event) -> {
-							rootstack.getChildren().remove(reqvb);
-						});
-					}
 
+					}
+					notify.show(thestage, thestage.getX() + 100, thestage.getY() + 200);
 				}
 			});
-
 		}
 
 		@Override
@@ -196,40 +168,34 @@ public class Game extends Application {
 				} else {
 					listView.getItems().clear();
 					genrateListView(players);
-					Popup playerpop = new Popup();
-					Label ptext = new Label("Sory player is offline,\nbut you can play with computer");
-					ptext.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.WARNING));
-					JFXButton ok =new JFXButton("ok");
-					JFXButton no =new JFXButton("no");
-					ok.getStyleClass().add("button-raised");
-					no.getStyleClass().add("button-raised-red");
-					ok.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.THUMBS_UP));
-					no.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.THUMBS_DOWN));
-					HBox btnhb=new HBox(ok,no);
-					btnhb.setSpacing(10);
-					btnhb.setAlignment(Pos.CENTER);
-					VBox vbc = new VBox(ptext,btnhb);
-					vbc.setAlignment(Pos.CENTER);
-					vbc.setId("pop");
-					playerpop.getContent().add(vbc);
-					ok.setOnAction((event) -> {
-						sMan.sendAIInvite(player.getId());
-						playerpop.hide();
-					});
-					no.setOnAction((event) -> {
-						playerpop.hide();
-					});
+					Popup oflinPop = new Popup();
+					yesNoPopup(oflinPop, "Sory player is offline,\nbut you can play with computer",
+							"Yes", "No",
+							(event) -> {
+								sMan.sendAIInvite(player.getId());
+								oflinPop.hide();
+							}, (event) -> {
+								oflinPop.hide();
+							});
+					Popup playPop = new Popup();
+					yesNoPopup(playPop, "Sory player is bussy now,\nbut you can play with computer",
+							"Yes", "No",
+							(event) -> {
+								sMan.sendAIInvite(player.getId());
+								playPop.hide();
+							}, (event) -> {
+								playPop.hide();
+							});
 					listView.setOnMouseClicked((MouseEvent event) -> {
 						if (event.getButton().equals(MouseButton.PRIMARY)) {
 							if (event.getClickCount() == 2) {
-								if (listView.getSelectionModel().getSelectedItem().getStatus().equals("onlin")) {
+								if (listView.getSelectionModel().getSelectedItem().getStatus().equals("idle")) {
 									sMan.sendInvite(listView.getSelectionModel().getSelectedItem().getId());
-									if (rootstack.getChildren().indexOf(reqvb) != -1) {
-										rootstack.getChildren().remove(reqvb);
-									}
 									rootstack.getChildren().add(wait);
-								} else {
-									playerpop.show(thestage);
+								} else if (listView.getSelectionModel().getSelectedItem().getStatus().equals("play")) {
+									playPop.show(thestage, thestage.getX() + 100, thestage.getY() + 200);
+								} else if (listView.getSelectionModel().getSelectedItem().getStatus().equals("offln")) {
+									oflinPop.show(thestage, thestage.getX() + 100, thestage.getY() + 200);
 								}
 
 								sender = true;
@@ -245,6 +211,54 @@ public class Game extends Application {
 
 	};
 
+	private void yesNoPopup(Popup pop, String message, String okstr, String nostr, EventHandler<ActionEvent> okaction, EventHandler<ActionEvent> noaction) {
+		JFXButton popupOk = new JFXButton();
+		JFXButton popupNo = new JFXButton();
+		VBox popupContainer = new VBox();
+		HBox popupBtnContainer = new HBox();
+		Label popupmessage = new Label();
+		popupOk.setText(okstr);
+		popupNo.setText(nostr);
+		popupmessage.setText(message);
+		popupmessage.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.WARNING));
+		popupOk.getStyleClass().add("button-raised");
+		popupNo.getStyleClass().add("button-raised-red");
+		popupOk.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.THUMBS_UP));
+		popupNo.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.THUMBS_DOWN));
+		popupBtnContainer.getChildren().setAll(popupOk, popupNo);
+		popupBtnContainer.setSpacing(10);
+		popupBtnContainer.setAlignment(Pos.CENTER);
+		popupContainer.getChildren().setAll(popupmessage, popupBtnContainer);
+		popupContainer.setEffect(new DropShadow(5, Color.BLACK));
+		popupContainer.setAlignment(Pos.CENTER);
+		popupContainer.setId("pop");
+		pop.getContent().setAll(popupContainer);
+		popupOk.setOnAction(okaction);
+		popupNo.setOnAction(noaction);
+	}
+
+	private Popup notifyPopup(Node message) {
+		Popup notifypop = new Popup();
+		JFXButton popupOk = new JFXButton();
+		VBox popupContainer = new VBox();
+		HBox popupBtnContainer = new HBox();
+		popupOk.setText("Close");
+		popupOk.getStyleClass().add("button-raised");
+		popupOk.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.CLOSE));
+		popupBtnContainer.getChildren().setAll(popupOk);
+		popupBtnContainer.setSpacing(10);
+		popupBtnContainer.setAlignment(Pos.CENTER);
+		popupContainer.getChildren().setAll(message, popupBtnContainer);
+		popupContainer.setEffect(new DropShadow(5, Color.BLACK));
+		popupContainer.setAlignment(Pos.CENTER);
+		popupContainer.setId("notifypop");
+		popupOk.setOnAction((event) -> {
+			notifypop.hide();
+		});
+		notifypop.getContent().setAll(popupContainer);
+		return notifypop;
+	}
+
 	private SessionManager.AuthListener authListener = new SessionManager.AuthListener() {
 		@Override
 		public void onSuccess(Player p) {
@@ -252,10 +266,7 @@ public class Game extends Application {
 				player = p;
 				game = createGameRoot();
 				game.getStylesheets().add(BasicUtils.getResourceUrl(Game.class, "style.css"));
-
-//				game.getStylesheets().add(getClass().getClassLoader().getResource("style.css").toExternalForm());
 				thestage.setScene(game);
-
 			});
 		}
 
