@@ -568,7 +568,9 @@ public class Game extends Application {
 		gridPane.add(btnReg, 0, 14, 2, 2);
 		gridPane.add(btnback, 0, 16, 2, 2);
 		gridPane.add(lblMessage, 0, 18, 2, 2);
-
+		btnback.setOnAction((event) -> {
+			thestage.setScene(login);
+		});
 		RequiredFieldValidator pfvalidator = new RequiredFieldValidator();
 		pfvalidator.setMessage("Input Required");
 		pfvalidator.setIcon(new FontAwesomeIconView(FontAwesomeIcon.WARNING));
@@ -821,6 +823,7 @@ public class Game extends Application {
 	private class Tile extends StackPane {
 
 		private Text text = new Text();
+		Color clr;
 		private int x;
 		private int y;
 
@@ -844,12 +847,23 @@ public class Game extends Application {
 			Rectangle border = new Rectangle(150, 150);
 			border.setFill(null);
 			border.setStroke(Color.BLACK);
-
+			
 			text.setFont(Font.font(72));
 
 			setAlignment(Pos.CENTER);
 			getChildren().addAll(border, text);
-
+			setOnMouseEntered((event) -> {
+				if(this.text.getText().isEmpty()){
+					border.setFill(Color.LIGHTGRAY);
+					border.setStroke(Color.DARKGRAY);
+				}
+			});
+			setOnMouseExited((event) -> {
+				if(this.text.getText().isEmpty()){
+					border.setFill(null);
+					border.setStroke(Color.BLACK);
+				}
+			});
 			setOnMouseClicked(event -> {
 
 				if (!playable) {
@@ -859,6 +873,8 @@ public class Game extends Application {
 				if (event.getButton() == MouseButton.PRIMARY) {
 					if (yourTurn && this.text.getText().isEmpty()) {
 						drawMove(playerSymbol);
+						border.setFill(clr.brighter().brighter().brighter().brighter());
+						border.setStroke(clr.darker());
 						checkState();
 						gMan.move(this.x, this.y);
 						yourTurn = false;
@@ -888,9 +904,11 @@ public class Game extends Application {
 		private void drawMove(String turn) {
 			if (turn.equals("X")) {
 				text.setFill(playerColor);
+				clr=playerColor;
 				text.setText("X");
 			} else {
 				text.setFill(opponentColor);
+				clr=opponentColor;
 				text.setText("O");
 			}
 		}
