@@ -240,7 +240,7 @@ public class NetworkManager implements Runnable{
               
               listener.onGameChatTextMessage(msg);
               
-          }  
+          } 
             
         }
         
@@ -362,7 +362,7 @@ public class NetworkManager implements Runnable{
             return;
         
         try {
-            Socket sock = new Socket("localhost", 8080);
+            Socket sock = new Socket("localhost", 8000);
 
             this.isConnected = true;
 

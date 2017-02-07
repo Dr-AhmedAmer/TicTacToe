@@ -1,7 +1,17 @@
 package tictactoe.gui;
 
-import java.awt.Container;
+import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXComboBox;
+import com.jfoenix.controls.JFXListView;
+import com.jfoenix.controls.JFXPasswordField;
+import com.jfoenix.controls.JFXPopup;
+import com.jfoenix.controls.JFXTextArea;
+import com.jfoenix.controls.JFXTextField;
+import com.jfoenix.validation.RequiredFieldValidator;
+import de.jensd.fx.glyphs.fontawesome.*;
 import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import tictactoe.emoji.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,24 +21,24 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -46,17 +56,19 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javax.imageio.ImageIO;
+import tictactoe.basic.BasicUtils;
 import tictactoe.client.game.GameManager;
 import tictactoe.client.network.SessionManager;
 import tictactoe.models.Player;
 
 public class Game extends Application {
 
-	ListView<Player> listView = new ListView<>();
-	Button chatEmojBtn = new Button();
-	Button chatSend = new Button("Send");
-	TextArea chatText = new TextArea();
-	ListView chatList = new ListView();
+	JFXListView<Player> listView = new JFXListView<>();
+	JFXButton chatEmojBtn = new JFXButton();
+	JFXButton chatSend = new JFXButton();
+	JFXTextArea chatText = new JFXTextArea();
+	JFXListView chatList = new JFXListView();
 	private Player player;
 	private SessionManager sMan = SessionManager.getInstance();
 	private GameManager gMan = GameManager.getInstance();
@@ -81,18 +93,19 @@ public class Game extends Application {
 	ImageView wait = new ImageView(new Image(getClass().getClassLoader().getResource("images/wait.gif").toString()));
 	Text responsetxt = new Text();
 	VBox reqvb = new VBox();
-	Button aiplay = new Button("Play with computer");
-	Button playagain = new Button("Play Again");
+	JFXButton aiplay = new JFXButton("Play with computer");
+	JFXButton playagain = new JFXButton("Play Again");
 	Line line = new Line();
-	ComboBox filter = new ComboBox();
+	JFXComboBox filter = new JFXComboBox();
 	HBox chatHbox = new HBox();
+	HostServices services = this.getHostServices();
 	private SessionManager.GameControlListener gameControlListener = new SessionManager.GameControlListener() {
 		@Override
 		public void onGameRequest(int senderId) {
 			Platform.runLater(() -> {
 				opponentId = senderId;
-				Button accept = new Button("Accept", new ImageView(new Image(getClass().getClassLoader().getResource("images/ok.png").toString(), 50, 50, true, true)));
-				Button reject = new Button("Reject", new ImageView(new Image(getClass().getClassLoader().getResource("images/not.png").toString(), 50, 50, true, true)));
+				JFXButton accept = new JFXButton("Accept", new ImageView(new Image(getClass().getClassLoader().getResource("images/ok.png").toString(), 50, 50, true, true)));
+				JFXButton reject = new JFXButton("Reject", new ImageView(new Image(getClass().getClassLoader().getResource("images/not.png").toString(), 50, 50, true, true)));
 				reject.setPrefWidth(200);
 				accept.setPrefWidth(200);
 				if (rootstack.getChildren().indexOf(reqvb) != -1) {
@@ -178,10 +191,21 @@ public class Game extends Application {
 				} else {
 					listView.getItems().clear();
 					genrateListView(players);
+
 					listView.setOnMouseClicked((MouseEvent event) -> {
 						if (event.getButton().equals(MouseButton.PRIMARY)) {
-							if (event.getClickCount() == 2) {
-								sMan.sendInvite(listView.getSelectionModel().getSelectedItem().getId());
+                                                    Platform.runLater(() -> {
+                                                        if (event.getClickCount() == 2) {
+								if (listView.getSelectionModel().getSelectedItem().getStatus().equals("onlin")) {
+									sMan.sendInvite(listView.getSelectionModel().getSelectedItem().getId());
+								} else {
+									JFXPopup playerpop = new JFXPopup();
+									Text ptext = new Text("Sory player is offline");
+									playerpop.getChildren().add(ptext);
+									playerpop.show(JFXPopup.PopupVPosition.TOP, JFXPopup.PopupHPosition.RIGHT);
+
+								}
+
 								if (rootstack.getChildren().indexOf(reqvb) != -1) {
 									rootstack.getChildren().remove(reqvb);
 								};
@@ -189,6 +213,8 @@ public class Game extends Application {
 								sender = true;
 								resetGame();
 							}
+                                                    });
+							
 						}
 					});
 				}
@@ -205,6 +231,7 @@ public class Game extends Application {
 			Platform.runLater(() -> {
 				player = p;
 				game = createGameRoot();
+				game.getStylesheets().add(BasicUtils.getResourceUrl(Game.class, "style.css"));
 
 //				game.getStylesheets().add(getClass().getClassLoader().getResource("style.css").toExternalForm());
 				thestage.setScene(game);
@@ -249,7 +276,7 @@ public class Game extends Application {
 					responsetxt.setFill(Color.RED);
 				}
 				responsetxt.setText(winner);
-				reqvb.getChildren().setAll(responsetxt, playagain);
+				reqvb.getChildren().setAll(responsetxt, playagain, createShare());
 				rootstack.getChildren().add(reqvb);
 				sender = false;
 				chatHbox.setDisable(true);
@@ -284,9 +311,8 @@ public class Game extends Application {
 		this.gMan = gMan;
 	}
 
-	
-
 	private void genrateListView(List<Player> players) {
+		listView.getStyleClass().add("mylistview");
 		ObservableList<Player> playerslist = FXCollections.observableArrayList(players);
 		filter.setOnAction((event) -> {
 			switch (filter.getSelectionModel().getSelectedItem().toString()) {
@@ -313,27 +339,27 @@ public class Game extends Application {
 			}
 		});
 		switch (filter.getSelectionModel().getSelectedItem().toString()) {
-				case "Online":
-					listView.getItems().clear();
-					playerslist.filtered((p) -> p.getStatus().equals("onlin") || p.getStatus().equals("idle")).forEach((p) -> {
-						listView.getItems().add(p);
-					});
-					break;
-				case "Offline":
-					listView.getItems().clear();
-					playerslist.filtered((p) -> p.getStatus().equals("offln")).forEach((p) -> {
-						listView.getItems().add(p);
-					});
-					break;
-				case "All":
-					listView.getItems().clear();
-					playerslist.forEach(p -> {
-						listView.getItems().add(p);
-					});
-					break;
-				default:
-					break;
-			}
+			case "Online":
+				listView.getItems().clear();
+				playerslist.filtered((p) -> p.getStatus().equals("onlin") || p.getStatus().equals("idle")).forEach((p) -> {
+					listView.getItems().add(p);
+				});
+				break;
+			case "Offline":
+				listView.getItems().clear();
+				playerslist.filtered((p) -> p.getStatus().equals("offln")).forEach((p) -> {
+					listView.getItems().add(p);
+				});
+				break;
+			case "All":
+				listView.getItems().clear();
+				playerslist.forEach(p -> {
+					listView.getItems().add(p);
+				});
+				break;
+			default:
+				break;
+		}
 
 		listView.setCellFactory(parm -> new ListCell<Player>() {
 			@Override
@@ -381,31 +407,48 @@ public class Game extends Application {
 		gridPane.setVgap(5);
 
 		//Implementing Nodes for GridPane
-		Label lblEmail = new Label("Email");
-		TextField txtEmail = new TextField();
-		Label lblPassword = new Label("Password");
-		PasswordField pf = new PasswordField();
-		Button btnLogin = new Button("Login");
+		JFXTextField txtEmail = new JFXTextField();
+		txtEmail.setPromptText("Email");
+		JFXPasswordField pf = new JFXPasswordField();
+		pf.setPromptText("Password");
+		JFXButton btnLogin = new JFXButton("Login");
+		btnLogin.getStyleClass().add("button-raised");
 		btnLogin.setMaxWidth(Double.MAX_VALUE);
-		Button btnSignUp = new Button("Sign Up");
+		JFXButton btnSignUp = new JFXButton("Sign Up");
 		btnSignUp.setMaxWidth(Double.MAX_VALUE);
-
+		btnSignUp.getStyleClass().add("button-raised");
+		lblMessage.getStyleClass().add("lblMessage");
 		//Adding Nodes to GridPane layout
-		gridPane.add(lblEmail, 0, 0);
-		gridPane.add(txtEmail, 1, 0);
-		gridPane.add(lblPassword, 0, 1);
-		gridPane.add(pf, 1, 1);
-		gridPane.add(btnLogin, 0, 2, 2, 2);
-		gridPane.add(btnSignUp, 0, 4, 2, 2);
-		gridPane.add(lblMessage, 0, 6, 2, 2);
+		gridPane.add(txtEmail, 0, 0, 2, 2);
+		gridPane.add(pf, 0, 4, 2, 2);
+		gridPane.add(btnLogin, 0, 8, 2, 2);
+		gridPane.add(btnSignUp, 0, 10, 2, 2);
+		gridPane.add(lblMessage, 0, 12, 2, 2);
+
+		RequiredFieldValidator validator = new RequiredFieldValidator();
+		validator.setMessage("Input Required");
+		validator.setIcon(new FontAwesomeIconView(FontAwesomeIcon.WARNING));
+		txtEmail.getValidators().add(validator);
+		txtEmail.focusedProperty().addListener((o, oldVal, newVal) -> {
+			if (!newVal) {
+				txtEmail.validate();
+			}
+		});
+		RequiredFieldValidator pfvalidator = new RequiredFieldValidator();
+		pfvalidator.setMessage("Input Required");
+		pfvalidator.setIcon(new FontAwesomeIconView(FontAwesomeIcon.WARNING));
+		pf.getValidators().add(pfvalidator);
+		pf.focusedProperty().addListener((o, oldVal, newVal) -> {
+			if (!newVal) {
+				pf.validate();
+			}
+		});
 		txtEmail.focusedProperty().addListener((arg0, oldValue, newValue) -> {
 			if (!newValue) {
 				if (!txtEmail.getText().matches("[A-Za-z0-9._%-]+\\@[A-Za-z]+\\.[A-Za-z]+.")) {
 					lblMessage.setText("invalid Email");
-					txtEmail.setText("");
 				}
 			}
-
 		});
 		btnLogin.setOnAction(e -> {
 			user = txtEmail.getText();
@@ -414,6 +457,7 @@ public class Game extends Application {
 		});
 		btnSignUp.setOnAction((event) -> {
 			signup = createSignUPRoot();
+			signup.getStylesheets().add(BasicUtils.getResourceUrl(Game.class, "style.css"));
 			thestage.setScene(signup);
 		});
 		gridPane.setAlignment(Pos.CENTER);
@@ -436,15 +480,15 @@ public class Game extends Application {
 
 		//Implementing Nodes for GridPane
 		Label lblUserName = new Label("Username");
-		TextField txtUserName = new TextField();
+		JFXTextField txtUserName = new JFXTextField();
 		Label lblEmail = new Label("Email");
-		TextField txtEmail = new TextField();
+		JFXTextField txtEmail = new JFXTextField();
 
 		Label lblPassword = new Label("Password");
 		PasswordField pf = new PasswordField();
-		Button btnReg = new Button("Register");
+		JFXButton btnReg = new JFXButton("Register");
 		btnReg.setMaxWidth(Double.MAX_VALUE);
-		ListView<String> avatarsList = new ListView<>();
+		JFXListView<String> avatarsList = new JFXListView<>();
 		avatarsList.setOrientation(Orientation.HORIZONTAL);
 		avatarsList.setPrefSize(290, 30);
 		for (String ava : avatars) {
@@ -541,7 +585,7 @@ public class Game extends Application {
 		combos.add(new Combo(board[0][0], board[1][1], board[2][2]));
 		combos.add(new Combo(board[2][0], board[1][1], board[0][2]));
 
-		listView.setPrefWidth(200);
+		listView.setPrefSize(200, 450);
 
 		VBox chatVbox = new VBox();
 		chatHbox.setPrefSize(450, 30);
@@ -549,19 +593,21 @@ public class Game extends Application {
 		chatText.setPrefSize(350, 30);
 
 		chatSend.setPrefWidth(70);
+		chatSend.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SEND));
+		chatEmojBtn.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SMILE_ALT));
 		chatSend.setPrefHeight(Double.MAX_VALUE);
-
+		
 		filter.getItems().setAll("Online", "Offline", "All");
 		filter.getSelectionModel().selectFirst();
+		filter.setPrefWidth(200);
 
 		chatEmojBtn.setPrefWidth(30);
 		chatEmojBtn.setPrefHeight(Double.MAX_VALUE);
-		ImageView chatEmoj = new ImageView(new Image(getClass().getClassLoader().getResource("images/emoji.png").toString(), 30, 30, true, true));
-		chatEmojBtn.setGraphic(chatEmoj);
 		chatHbox.getChildren().addAll(chatText, chatSend, chatEmojBtn);
 		ScrollPane chatScroll = new ScrollPane();
 		chatScroll.setPrefSize(600, 150);
 		chatScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+		chatScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
 		chatScroll.setContent(chatList);
 		chatList.setPrefSize(600, 150);
@@ -571,6 +617,9 @@ public class Game extends Application {
 		filter.setPrefWidth(200);
 		playersvb.setPrefWidth(200);
 		aiplay.setPrefWidth(200);
+		aiplay.getStyleClass().add("button-raised");
+//		chatSend.getStyleClass().add("button-raised");
+//		chatEmojBtn.getStyleClass().add("button-raised");
 		playersvb.getChildren().addAll(filter, listView, aiplay);
 		rootstack.getChildren().add(boardPane);
 		rootstack.setAlignment(Pos.CENTER);
@@ -636,6 +685,8 @@ public class Game extends Application {
 		sMan.setGameControlListener(gameControlListener);
 
 		login = createLoginRoot();
+		login.getStylesheets().add(BasicUtils.getResourceUrl(Game.class, "style.css"));
+
 		primaryStage.setResizable(false);
 		primaryStage.setScene(login);
 		primaryStage.show();
@@ -765,6 +816,31 @@ public class Game extends Application {
 				text.setText("O");
 			}
 		}
+	}
+
+	public Parent createShare() {
+		VBox container = new VBox();
+		Platform.runLater(() -> {
+			JFXButton facebook = new JFXButton("Facebook", new ImageView(new Image(getClass().getClassLoader().getResource("images/fb.png").toString(), 20, 20, true, true)));
+			JFXButton twitter = new JFXButton("Twitter", new ImageView(new Image(getClass().getClassLoader().getResource("images/tw.png").toString(), 20, 20, true, true)));
+			HBox sharehb = new HBox();
+			sharehb.getChildren().addAll(facebook, twitter);
+			container.getChildren().add(sharehb);
+			WritableImage image = boardPane.snapshot(new SnapshotParameters(), null);
+			facebook.setOnAction((event) -> {
+				try {
+					File file = new File("snap.png");
+					ImageIO.write(SwingFXUtils.fromFXImage(image, null), "png", file);
+					services.showDocument("https://www.facebook.com/sharer/sharer.php?u=" + file.toURI().toURL().toString());
+				} catch (MalformedURLException ex) {
+					Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
+				} catch (IOException ex) {
+					Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
+				}
+			});
+
+		});
+		return container;
 	}
 
 	public static void main(String[] args) {

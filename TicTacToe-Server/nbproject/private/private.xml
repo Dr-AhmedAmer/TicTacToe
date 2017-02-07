@@ -2,15 +2,6 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group>
-            <file>file:/home/ahmed/NetBeansProjects/TicTacToe/TicTacToe-Server/src/tictactoe/server/TicTacToeServer.java</file>
-            <file>file:/home/ahmed/NetBeansProjects/TicTacToe/TicTacToe-Server/src/tictactoe/network/Server.java</file>
-            <file>file:/home/ahmed/NetBeansProjects/TicTacToe/TicTacToe-Server/src/tictactoe/helpers/DBManager.java</file>
-            <file>file:/home/ahmed/NetBeansProjects/TicTacToe/TicTacToe-Server/src/tictactoe/helpers/AuthHelper.java</file>
-            <file>file:/home/ahmed/NetBeansProjects/TicTacToe/TicTacToe-Server/src/tictactoe/network/Session.java</file>
-            <file>file:/home/ahmed/NetBeansProjects/TicTacToe/TicTacToe-Server/src/tictactoe/gui/Smain.java</file>
-            <file>file:/home/ahmed/NetBeansProjects/TicTacToe/TicTacToe-Server/src/tictactoe/game/GameAI.java</file>
-            <file>file:/home/ahmed/NetBeansProjects/TicTacToe/TicTacToe-Server/src/tictactoe/network/SessionManager.java</file>
-        </group>
+        <group/>
     </open-files>
 </project-private>
