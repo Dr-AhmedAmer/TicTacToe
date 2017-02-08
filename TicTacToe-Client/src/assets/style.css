@@ -49,6 +49,10 @@ and open the template in the editor.
     -fx-text-inner-color:white;
     -fx-prompt-text-fill:white;
 }
+.chat-input {
+    -fx-text-inner-color:black;
+    -fx-prompt-text-fill:white;
+}
 .text-input .label{
     -fx-text-fill: red;
 }

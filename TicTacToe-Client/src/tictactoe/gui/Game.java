@@ -41,7 +41,6 @@ import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
@@ -55,8 +54,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
@@ -429,8 +426,9 @@ public class Game extends Application {
 
 					HBox hBox = new HBox();
 					hBox.setSpacing(3);
+					hBox.setAlignment(Pos.BASELINE_LEFT);
 					VBox ptvb = new VBox();
-					ptvb.setAlignment(Pos.CENTER);
+					ptvb.setAlignment(Pos.BASELINE_LEFT);
 					Text pt = new Text(String.valueOf(player.getPoints()));
 					pt.setFont(Font.font(pt.getFont().toString(), FontWeight.BLACK, FontPosture.ITALIC, 10));
 					Text name = new Text(player.getDisplayName());
@@ -443,7 +441,7 @@ public class Game extends Application {
 					pictureImageView.setImage(image);
 					if (player.getStatus().equals("idle")) {
 						notification.clear();
-						notification.setText(notification.getText() + "\n   s" + player.getDisplayName() + " is online");
+						notification.setText(notification.getText() + "\n  >: " + player.getDisplayName() + " is online");
 					}
 					hBox.getChildren().addAll(pictureImageView, ptvb);
 					hBox.setAlignment(Pos.CENTER_LEFT);
@@ -570,8 +568,6 @@ public class Game extends Application {
 			avatarsList.getItems().add(ava);
 		}
 		avatarsList.setCellFactory(parm -> new ListCell<String>() {
-			private final ImageView imageView = new ImageView();
-
 			@Override
 			public void updateItem(String ava, boolean empty) {
 				super.updateItem(ava, empty);
@@ -732,7 +728,7 @@ public class Game extends Application {
 		chatHbox.setPrefSize(450, 30);
 
 		chatText.setPrefSize(350, 30);
-
+		chatText.getStyleClass().add("chat-input");
 		chatSend.setPrefWidth(70);
 		chatSend.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SEND));
 		chatEmojBtn.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SMILE_ALT));
