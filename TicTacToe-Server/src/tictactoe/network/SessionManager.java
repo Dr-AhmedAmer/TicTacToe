@@ -52,6 +52,12 @@ public class SessionManager{
         
     }
     
+    public synchronized boolean isLoggedIn(int playerId){
+        
+        return this.sessions.containsKey(playerId);
+        
+    }
+    
     public synchronized Session getSessionByPlayerId(int playerId){
         
         return this.sessions.get(playerId);

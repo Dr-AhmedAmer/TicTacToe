@@ -198,7 +198,7 @@ public class Session implements Runnable{
 
                                 ResultObject<Player> authResult = AuthHelper.logIn(authMessage);
 
-                                if(authResult.getErrors().isEmpty()){
+                                if(authResult.getErrors().isEmpty() ){
 
                                     this.player = authResult.getResult();
                                     this.sessionManager.addSession(this.player.getId(), this);
@@ -212,7 +212,8 @@ public class Session implements Runnable{
                                 AuthResultMessage authResultMsg = new AuthResultMessage();
                                 authResultMsg.setErrors(authResult.getErrors());
                                 authResultMsg.setPlayer(authResult.getResult());
-
+                                
+                                
                                 this.send(MessageTypes.MSG_TYPE_AUTH,this.objectMapper.writeValueAsString(authResultMsg));
                                 sMan.refreshPlayerList();
 

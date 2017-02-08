@@ -53,15 +53,15 @@ public class Smain extends Application implements SessionManager.PlayerStatusLis
         VBox vboxin = new VBox(10);
         vboxin.minHeight(80);
          
-        VBox vbox = new VBox(10);
+        VBox vbox = new VBox(0);
         
         BorderPane root =new BorderPane();
         Button btn = new Button();
         btn.setText("start server");
         
-        vbox.getChildren().addAll(lport,port,vboxin,btn);
+        vbox.getChildren().addAll(vboxin,btn);
         root.setMargin(vbox, new Insets(80,100,0,100));
-        
+        vbox.setAlignment(Pos.CENTER);
         root.setCenter(vbox);
         
         
@@ -70,7 +70,7 @@ public class Smain extends Application implements SessionManager.PlayerStatusLis
         btn.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-               Server.start(Integer.parseInt(port.getText()));
+               Server.start(8000);
                 Platform.runLater(() -> {
                     
                 genrateListView(PlayerHelper.getAllPlayers().getResults());

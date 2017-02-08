@@ -12,12 +12,35 @@ and open the template in the editor.
     -fx-font-size: 14px;
     -fx-button-type: RAISED;
     -fx-background-color: rgb(77,102,204);
-    -fx-pref-width: 200;
     -fx-text-fill: WHITE;
 }
-/*.root{
-    -fx-background-color: #262626;
-}*/
+.button-raised-red{
+    -fx-padding: 0.7em 0.57em;
+    -fx-font-size: 14px;
+    -fx-button-type: RAISED;
+    -fx-background-color: rgb(192, 57, 43);
+    -fx-text-fill: WHITE;
+}
+#pop{
+    -fx-background-color:white;
+    -fx-padding: 0.7em 0.57em;
+    -fx-position: relative;
+    -fx-border-color: #bdc3c7;
+    -fx-border-width: 5px;
+}
+#notifypop{
+    -fx-background-color:white;
+    -fx-padding: 0.7em 0.57em;
+    -fx-position: relative;
+    -fx-border-color: #bdc3c7;
+    -fx-border-width: 5px;
+}
+#pop .label{
+      -fx-font-size: 14px;
+      -fx-text-fill: #2c3e50;
+      -fx-padding: 0.3em 0.3em;
+}
+
 .text-field{
     -fx-padding: 0.5em 0.5em;
     -fx-font-size: 14px;

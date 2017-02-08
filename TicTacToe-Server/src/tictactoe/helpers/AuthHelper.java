@@ -9,11 +9,14 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import tictactoe.models.Player;
+import tictactoe.network.SessionManager;
 import tictactoe.network.messages.AuthMessage;
 import tictactoe.network.messages.RegisterMessage;
 
 
 public class AuthHelper {
+    
+
     
     public static ResultObject<Player> register(RegisterMessage msg){
         
@@ -22,6 +25,8 @@ public class AuthHelper {
         boolean validEmail = Validator.validateEmail(msg.getEmail());
         boolean validName = Validator.validateName(msg.getDisplayName());
         boolean validPass = Validator.validatePassword(msg.getPassword());
+        
+        
         
         if(!validEmail)
             result.addError(new Error("Invalid Email"));
@@ -81,6 +86,7 @@ public class AuthHelper {
         boolean validEmail = Validator.validateEmail(msg.getUserName());
         boolean validPass = Validator.validatePassword(msg.getPassword());
         
+       
         if(!validEmail)
             result.addError(new Error("Invalid Email"));
         
@@ -95,6 +101,13 @@ public class AuthHelper {
         query.setParameter("QueryEmail",msg.getUserName());
         query.setParameter("QueryPassword",msg.getPassword());
         List list = query.list();
+        
+        Player player = (Player)list.get(0);
+        
+        if(player.getStatus().equals("onlin")){
+            result.addError(new Error ("Already logged in"));
+            return  result;
+        }
    
         if(list.size() > 0){
             

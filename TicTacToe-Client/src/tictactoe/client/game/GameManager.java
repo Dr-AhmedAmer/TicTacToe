@@ -79,6 +79,7 @@ public class GameManager implements SessionManager.GameMessageListener{
     
     @Override
     public void onGameMove(int x, int y) {
+        System.out.println(x+" "+y);
         onGameMoveCallback(x, y);
     }
 
