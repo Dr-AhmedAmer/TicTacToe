@@ -76,17 +76,16 @@ import tictactoe.network.messages.AuthResultMessage;
 
 public class Game extends Application {
 	
-
-	JFXTextArea notification =new JFXTextArea(); 
+	JFXTextArea notification = new JFXTextArea();	
 	JFXListView<Player> listView = new JFXListView<>();
 	JFXButton chatEmojBtn = new JFXButton();
 	JFXButton chatSend = new JFXButton();
 	JFXTextArea chatText = new JFXTextArea();
 	JFXListView chatList = new JFXListView();
-	Label winsc=new Label();
-	Label losesc=new Label();
-	int losenum=0;
-	int winnum=0;
+	Label winsc = new Label();
+	Label losesc = new Label();
+	int losenum = 0;
+	int winnum = 0;
 	private Player player;
 	private SessionManager sMan = SessionManager.getInstance();
 	private GameManager gMan = GameManager.getInstance();
@@ -137,43 +136,43 @@ public class Game extends Application {
 				requestpop.show(thestage, thestage.getX() + 100, thestage.getY() + 200);
 			});
 		}
-
+		
 		@Override
 		public void onGameResponse(int senderId, int response, String symbol) {
-
+			
 			Platform.runLater(() -> {
 				rootstack.getChildren().remove(reqvb);
 				responsetxt.setFont(Font.font(responsetxt.getFont().toString(), FontWeight.BOLD, 24));
 				Popup notify = notifyPopup(responsetxt);
-					if (response == 0) {
-						rootstack.getChildren().remove(wait);
-						responsetxt.setText("Player Accepted");
-						responsetxt.setFill(Color.GREEN);
-						if (symbol.equals("X")) {
-							yourTurn = true;
-							opponentSymbol = "O";
-						} else {
-							opponentSymbol = "X";
-						}
-						playerSymbol = symbol;
-						gMan.startGame();
-
+				if (response == 0) {
+					rootstack.getChildren().remove(wait);
+					responsetxt.setText("Player Accepted");
+					responsetxt.setFill(Color.GREEN);
+					if (symbol.equals("X")) {
+						yourTurn = true;
+						opponentSymbol = "O";
 					} else {
-						rootstack.getChildren().remove(wait);
-						responsetxt.setFill(Color.RED);
-						responsetxt.setText("Player Rejected");
-
+						opponentSymbol = "X";
 					}
+					playerSymbol = symbol;
+					gMan.startGame();
+					
+				} else {
+					rootstack.getChildren().remove(wait);
+					responsetxt.setFill(Color.RED);
+					responsetxt.setText("Player Rejected");
+					
+				}
 				if (sender) {
 					notify.show(thestage, thestage.getX() + 100, thestage.getY() + 200);
 				}
 			});
 		}
-
+		
 		@Override
 		public void onPlayerList(List<Player> players) {
 			Platform.runLater(() -> {
-
+				
 				if (players == null) {
 					System.out.println("Empty");
 				} else {
@@ -205,24 +204,24 @@ public class Game extends Application {
 									sMan.sendInvite(listView.getSelectionModel().getSelectedItem().getId());
 									sender = true;
 									resetGame();
-
-								}else if (listView.getSelectionModel().getSelectedItem().getStatus().equals("play")) {
+									
+								} else if (listView.getSelectionModel().getSelectedItem().getStatus().equals("play")) {
 									playPop.show(thestage, thestage.getX() + 100, thestage.getY() + 200);
-								}else if (listView.getSelectionModel().getSelectedItem().getStatus().equals("offln")) {
+								} else if (listView.getSelectionModel().getSelectedItem().getStatus().equals("offln")) {
 									oflinPop.show(thestage, thestage.getX() + 100, thestage.getY() + 200);
 								}
-
+								
 							}
 						}
 					});
 				}
-
+				
 			});
-
+			
 		}
-
+		
 	};
-
+	
 	private void yesNoPopup(Popup pop, String message, String okstr, String nostr, EventHandler<ActionEvent> okaction, EventHandler<ActionEvent> noaction) {
 		JFXButton popupOk = new JFXButton();
 		JFXButton popupNo = new JFXButton();
@@ -248,7 +247,7 @@ public class Game extends Application {
 		popupOk.setOnAction(okaction);
 		popupNo.setOnAction(noaction);
 	}
-
+	
 	private Popup notifyPopup(Node message) {
 		Popup notifypop = new Popup();
 		JFXButton popupOk = new JFXButton();
@@ -270,7 +269,7 @@ public class Game extends Application {
 		notifypop.getContent().setAll(popupContainer);
 		return notifypop;
 	}
-
+	
 	private SessionManager.AuthListener authListener = new SessionManager.AuthListener() {
 		@Override
 		public void onSuccess(Player p) {
@@ -281,20 +280,20 @@ public class Game extends Application {
 				thestage.setScene(game);
 			});
 		}
-
+		
 		@Override
 		public void onFailure(AuthResultMessage msg) {
 			Platform.runLater(() -> {
-                                if(msg.getErrors().size() >0){
-                                    for (tictactoe.helpers.Error err : msg.getErrors()){
-                                        lblMessage.setText(err.getDescription());
-                                    }
-                                }
+				if (msg.getErrors().size() > 0) {
+					for (tictactoe.helpers.Error err : msg.getErrors()) {
+						lblMessage.setText(err.getDescription());
+					}
+				}
 			});
-
+			
 		}
 	};
-
+	
 	private GameManager.GameListener gameListener = new GameManager.GameListener() {
 		@Override
 		public void onGameMove(int x, int y) {
@@ -302,7 +301,7 @@ public class Game extends Application {
 			checkState();
 			yourTurn = true;
 		}
-
+		
 		@Override
 		public void onGameEnd(String winner) {
 			Platform.runLater(() -> {
@@ -324,7 +323,7 @@ public class Game extends Application {
 				} else if (winner.equals("Looser")) {
 					responsetxt.setFill(Color.RED);
 					losesc.setText(String.valueOf(++losenum));
-				}else{
+				} else {
 					responsetxt.setFill(Color.BLACK);
 				}
 				responsetxt.setText(winner);
@@ -334,40 +333,38 @@ public class Game extends Application {
 				sender = false;
 				chatHbox.setDisable(true);
 			});
-
+			
 		}
-
+		
 		@Override
 		public void onGameChatTextMessage(Player sender, String content) {
-                    
-                    Platform.runLater(() -> {
-                        HBox hBox = new HBox();
-			VBox vBox = new VBox();
-			hBox.setSpacing(3);
-			vBox.setSpacing(3);
-			Text name = new Text(sender.getDisplayName());
-			Text messeget = new Text(content);
-			messeget.setFont(Font.font(messeget.getFont().toString(), FontWeight.LIGHT, FontPosture.ITALIC, 14));
-			ImageView pictureImageView = new ImageView();
-			Image image = new Image(getClass().getClassLoader().getResource("images/avatars/" + sender.getImage()).toString(), 20, 20, true, true);
-			pictureImageView.setImage(image);
-
-			hBox.getChildren().addAll(pictureImageView, name);
-			hBox.setAlignment(Pos.CENTER_LEFT);
-			vBox.setStyle("-fx-background-color:rgba(52, 152, 219,1.0);-fx-padding:5px;-fx-border-radius:10");
-			vBox.getChildren().addAll(hBox, messeget);
-			chatList.getItems().add(vBox);
-                    });
-
 			
-
+			Platform.runLater(() -> {
+				HBox hBox = new HBox();
+				VBox vBox = new VBox();
+				hBox.setSpacing(3);
+				vBox.setSpacing(3);
+				Text name = new Text(sender.getDisplayName());
+				Text messeget = new Text(content);
+				messeget.setFont(Font.font(messeget.getFont().toString(), FontWeight.LIGHT, FontPosture.ITALIC, 14));
+				ImageView pictureImageView = new ImageView();
+				Image image = new Image(getClass().getClassLoader().getResource("images/avatars/" + sender.getImage()).toString(), 20, 20, true, true);
+				pictureImageView.setImage(image);
+				
+				hBox.getChildren().addAll(pictureImageView, name);
+				hBox.setAlignment(Pos.CENTER_LEFT);
+				vBox.setStyle("-fx-background-color:rgba(52, 152, 219,1.0);-fx-padding:5px;-fx-border-radius:10");
+				vBox.getChildren().addAll(hBox, messeget);
+				chatList.getItems().add(vBox);
+			});
+			
 		}
 	};
-
+	
 	public void setgMan(GameManager gMan) {
 		this.gMan = gMan;
 	}
-
+	
 	private void genrateListView(List<Player> players) {
 		listView.getStyleClass().add("mylistview");
 		ObservableList<Player> playerslist = FXCollections.observableArrayList(players);
@@ -417,7 +414,7 @@ public class Game extends Application {
 			default:
 				break;
 		}
-
+		
 		listView.setCellFactory(parm -> new ListCell<Player>() {
 			@Override
 			public void updateItem(Player player, boolean empty) {
@@ -441,26 +438,26 @@ public class Game extends Application {
 					ImageView pictureImageView = new ImageView();
 					Image image = new Image(getClass().getClassLoader().getResource("images/avatars/" + player.getImage()).toString(), 50, 50, true, true);
 					pictureImageView.setImage(image);
-					if(player.getStatus().equals("idle")){
+					if (player.getStatus().equals("idle")) {
 						notification.clear();
-						notification.setText(notification.getText()+"\n   s"+player.getDisplayName()+" is online");
+						notification.setText(notification.getText() + "\n   s" + player.getDisplayName() + " is online");
 					}
 					hBox.getChildren().addAll(pictureImageView, ptvb);
 					hBox.setAlignment(Pos.CENTER_LEFT);
-
+					
 					setGraphic(hBox);
-
+					
 				}
-
+				
 			}
 		});
 	}
-
+	
 	private Scene createLoginRoot() {
-		Text welcome=new Text("Welcome to our TicTacToe Game");
+		Text welcome = new Text("Welcome to our TicTacToe Game");
 		welcome.setFont(Font.font(responsetxt.getFont().toString(), FontWeight.BOLD, 18));
 		welcome.setFill(Color.WHITESMOKE);
-		welcome.setEffect(new DropShadow(5,Color.BLACK));
+		welcome.setEffect(new DropShadow(5, Color.BLACK));
 		BorderPane bp = new BorderPane();
 		bp.setPadding(new Insets(30));
 		bp.setBackground(new Background(new BackgroundImage(new Image(BasicUtils.getResourceUrl(Game.class, "images.jpg")), BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT)));
@@ -484,13 +481,13 @@ public class Game extends Application {
 		btnSignUp.getStyleClass().add("button-raised");
 		lblMessage.getStyleClass().add("lblMessage");
 		//Adding Nodes to GridPane layout
-		gridPane.add(welcome, 0, 0,2,2);
+		gridPane.add(welcome, 0, 0, 2, 2);
 		gridPane.add(txtEmail, 0, 4, 2, 2);
 		gridPane.add(pf, 0, 8, 2, 2);
 		gridPane.add(btnLogin, 0, 12, 2, 2);
 		gridPane.add(btnSignUp, 0, 14, 2, 2);
 		gridPane.add(lblMessage, 0, 16, 2, 2);
-
+		
 		RequiredFieldValidator validator = new RequiredFieldValidator();
 		validator.setMessage("Input Required");
 		validator.setIcon(new FontAwesomeIconView(FontAwesomeIcon.WARNING));
@@ -533,16 +530,16 @@ public class Game extends Application {
 		gridPane.setAlignment(Pos.CENTER);
 		bp.setCenter(gridPane);
 		return new Scene(bp, 650, 650);
-
+		
 	}
 	String avatar;
-
+	
 	private Scene createSignUPRoot() {
 		String avatars[] = {"man1.png", "man2.png", "man3.png", "man4.png", "girl1.png", "girl2.png", "girl3.png", "girl4.png"};
 		BorderPane bp = new BorderPane();
 		bp.setPadding(new Insets(10, 50, 50, 50));
 		bp.setBackground(new Background(new BackgroundImage(new Image(BasicUtils.getResourceUrl(Game.class, "images.jpg")), BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT)));
-		
+
 		//Adding GridPane
 		GridPane gridPane = new GridPane();
 		gridPane.setPadding(new Insets(20, 20, 20, 20));
@@ -557,10 +554,10 @@ public class Game extends Application {
 		JFXButton btnback = new JFXButton("Back");
 		btnback.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.HOME));
 		btnReg.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SIGN_IN));
-
+		
 		btnReg.setMaxWidth(Double.MAX_VALUE);
 		btnback.setMaxWidth(Double.MAX_VALUE);
-
+		
 		btnReg.getStyleClass().add("button-raised");
 		btnback.getStyleClass().add("button-raised");
 		JFXListView<String> avatarsList = new JFXListView<>();
@@ -571,7 +568,7 @@ public class Game extends Application {
 		}
 		avatarsList.setCellFactory(parm -> new ListCell<String>() {
 			private final ImageView imageView = new ImageView();
-
+			
 			@Override
 			public void updateItem(String ava, boolean empty) {
 				super.updateItem(ava, empty);
@@ -586,13 +583,13 @@ public class Game extends Application {
 				}
 			}
 		});
-
+		
 		avatarsList.setOnMouseClicked((MouseEvent event) -> {
 			if (event.getButton().equals(MouseButton.PRIMARY)) {
 				avatar = avatarsList.getSelectionModel().getSelectedItem();
 			}
 		});
-
+		
 		txtEmail.setPromptText("Email");
 		pf.setPromptText("Password");
 		txtUserName.setPromptText("User Name");
@@ -624,16 +621,16 @@ public class Game extends Application {
 		usrvalidator.setIcon(new FontAwesomeIconView(FontAwesomeIcon.WARNING));
 		txtUserName.getValidators().add(usrvalidator);
 		txtUserName.focusedProperty().addListener((o, oldVal, newVal) -> {
-
+			
 			if (!newVal) {
 				txtUserName.validate();
 				txtEmail.resetValidation();
 				pf.resetValidation();
 				lblMessage.setText("");
 			}
-
+			
 		});
-
+		
 		RequiredFieldValidator mailvalidator = new RequiredFieldValidator();
 		mailvalidator.setMessage("Input Required");
 		mailvalidator.setIcon(new FontAwesomeIconView(FontAwesomeIcon.WARNING));
@@ -652,16 +649,16 @@ public class Game extends Application {
 					txtEmail.setText("");
 				}
 			}
-
+			
 		});
-
+		
 		btnReg.setOnAction(e -> {
 			String name = txtUserName.getText();
 			String email = txtEmail.getText();
 			String pass = pf.getText();
-			if(avatar==null){
+			if (avatar == null) {
 				lblMessage.setText("Choose an avatar first");
-			}else{
+			} else {
 				lblMessage.setText("");
 				sMan.register(email, pass, name, avatar);
 				
@@ -671,29 +668,29 @@ public class Game extends Application {
 		gridPane.setAlignment(Pos.CENTER);
 		bp.setCenter(gridPane);
 		return new Scene(bp, 650, 650);
-
+		
 	}
-
+	
 	Pane boardPane = new Pane();
-
+	
 	private Scene createGameRoot() {
-
+		
 		BorderPane root = new BorderPane();
 		boardPane.setPrefSize(450, 450);
 		root.setPrefSize(650, 650);
-		HBox countitle=new HBox();
-		HBox counters=new HBox();
+		HBox countitle = new HBox();
+		HBox counters = new HBox();
 		counters.setSpacing(20);
 		losesc.setText(String.valueOf(losenum));
 		winsc.setText(String.valueOf(winnum));
-		Label wins=new Label("Wins");
-		Label loses=new Label("Loses");
+		Label wins = new Label("Wins");
+		Label loses = new Label("Loses");
 		wins.getStyleClass().add("labelc");
 		loses.getStyleClass().add("labelc");
 		winsc.getStyleClass().add("labelwin");
 		losesc.getStyleClass().add("labellose");
-		countitle.getChildren().addAll(wins,loses);
-		counters.getChildren().addAll(winsc,losesc);
+		countitle.getChildren().addAll(wins, loses);
+		counters.getChildren().addAll(winsc, losesc);
 		counters.setAlignment(Pos.CENTER);
 		countitle.setAlignment(Pos.CENTER);
 		countitle.setPrefWidth(200);
@@ -706,7 +703,7 @@ public class Game extends Application {
 				tile.setX(j);
 				tile.setY(i);
 				tile.setDisable(true);
-
+				
 				boardPane.getChildren().add(tile);
 				board[j][i] = tile;
 			}
@@ -725,34 +722,34 @@ public class Game extends Application {
 		// diagonals
 		combos.add(new Combo(board[0][0], board[1][1], board[2][2]));
 		combos.add(new Combo(board[2][0], board[1][1], board[0][2]));
-
+		
 		listView.setPrefSize(200, 425);
-
+		
 		VBox chatVbox = new VBox();
 		chatHbox.setPrefSize(450, 30);
-
+		
 		chatText.setPrefSize(350, 30);
-
+		
 		chatSend.setPrefWidth(70);
 		chatSend.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SEND));
 		chatEmojBtn.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SMILE_ALT));
 		chatSend.setPrefHeight(Double.MAX_VALUE);
-
+		
 		filter.getItems().setAll("Online", "Offline", "All");
 		filter.getSelectionModel().selectFirst();
 		filter.setPrefWidth(200);
-
+		
 		chatEmojBtn.setPrefWidth(30);
 		chatEmojBtn.setPrefHeight(Double.MAX_VALUE);
 		chatHbox.getChildren().addAll(chatText, chatSend, chatEmojBtn);
 		ScrollPane chatScroll = new ScrollPane();
 		chatScroll.setPrefSize(600, 150);
 		chatScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-		chatScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-
+		chatScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+		
 		chatScroll.setContent(chatList);
 		chatList.setPrefSize(600, 150);
-
+		
 		chatHbox.setDisable(true);
 		VBox playersvb = new VBox();
 		filter.setPrefWidth(200);
@@ -760,7 +757,7 @@ public class Game extends Application {
 		aiplay.setPrefWidth(200);
 		aiplay.getStyleClass().add("button-raised");
 		notification.getStyleClass().add("notification");
-		playersvb.getChildren().addAll(filter, listView, aiplay,countitle,counters,notification);
+		playersvb.getChildren().addAll(filter, listView, aiplay, countitle, counters, notification);
 		rootstack.getChildren().add(boardPane);
 		rootstack.setAlignment(Pos.CENTER);
 		chatVbox.getChildren().addAll(rootstack, chatScroll, chatHbox);
@@ -777,14 +774,14 @@ public class Game extends Application {
 			ImageView pictureImageView = new ImageView();
 			Image image = new Image(getClass().getClassLoader().getResource("images/avatars/" + player.getImage()).toString(), 20, 20, true, true);
 			pictureImageView.setImage(image);
-
+			
 			hBox.getChildren().addAll(pictureImageView, name);
 			hBox.setAlignment(Pos.CENTER_LEFT);
 			vBox.setStyle("-fx-background-color:rgba(231, 76, 60,1.0);-fx-padding:5px;-fx-border-radius:10");
 			vBox.getChildren().addAll(hBox, messeget);
 			chatList.getItems().add(vBox);
 		});
-
+		
 		chatEmojBtn.setOnAction((event) -> {
 			EmojiUtil.showEmojiPopup(chatVbox, true, e -> {
 				chatText.setText(chatText.getText() + e.getEmoji());
@@ -799,14 +796,14 @@ public class Game extends Application {
 			sender = true;
 			chatHbox.setDisable(false);
 		});
-
+		
 		root.setCenter(chatVbox);
 		root.setRight(playersvb);
 		return new Scene(root, 650, 650);
 	}
-
+	
 	public void resetGame() {
-
+		
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 3; j++) {
 				board[j][i].clear();
@@ -817,21 +814,21 @@ public class Game extends Application {
 		playable = true;
 		chatHbox.setDisable(false);
 	}
-
+	
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		thestage = primaryStage;
 		sMan.setAuthListener(authListener);
 		gMan.setGameListener(gameListener);
 		sMan.setGameControlListener(gameControlListener);
-
+		
 		login = createLoginRoot();
 		login.getStylesheets().add(BasicUtils.getResourceUrl(Game.class, "style.css"));
 		primaryStage.setResizable(false);
 		primaryStage.setScene(login);
 		primaryStage.show();
 	}
-
+	
 	private void checkState() {
 		for (Combo combo : combos) {
 			if (combo.isComplete()) {
@@ -841,36 +838,36 @@ public class Game extends Application {
 			}
 		}
 	}
-
+	
 	private void playWinAnimation(Combo combo) {
 		Platform.runLater(() -> {
-
+			
 			line.setFill(playerColor);
 			line.setStrokeWidth(5);
 			line.setStartX(combo.tiles[0].getCenterX());
 			line.setStartY(combo.tiles[0].getCenterY());
 			line.setEndX(combo.tiles[0].getCenterX());
 			line.setEndY(combo.tiles[0].getCenterY());
-
+			
 			boardPane.getChildren().add(line);
-
+			
 			Timeline timeline = new Timeline();
 			timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(1),
 					new KeyValue(line.endXProperty(), combo.tiles[2].getCenterX()),
 					new KeyValue(line.endYProperty(), combo.tiles[2].getCenterY())));
 			timeline.play();
 		});
-
+		
 	}
-
+	
 	private class Combo {
-
+		
 		private Tile[] tiles;
-
+		
 		public Combo(Tile... tiles) {
 			this.tiles = tiles;
 		}
-
+		
 		public boolean isComplete() {
 			if (tiles[0].getValue().isEmpty()) {
 				return false;
@@ -879,57 +876,57 @@ public class Game extends Application {
 					&& tiles[0].getValue().equals(tiles[2].getValue());
 		}
 	}
-
+	
 	private class Tile extends StackPane {
-
+		
 		private Text text = new Text();
 		Color clr;
 		private int x;
 		private int y;
-
+		
 		public int getX() {
 			return x;
 		}
-
+		
 		public void setX(int x) {
 			this.x = x;
 		}
-
+		
 		public int getY() {
 			return y;
 		}
-
+		
 		public void setY(int y) {
 			this.y = y;
 		}
-
+		
 		public Tile() {
 			Rectangle border = new Rectangle(150, 150);
 			border.setFill(null);
 			border.setStroke(Color.BLACK);
 			
 			text.setFont(Font.font(72));
-
+			
 			setAlignment(Pos.CENTER);
 			getChildren().addAll(border, text);
 			setOnMouseEntered((event) -> {
-				if(this.text.getText().isEmpty()){
+				if (this.text.getText().isEmpty()) {
 					border.setFill(Color.LIGHTGRAY);
 					border.setStroke(Color.DARKGRAY);
 				}
 			});
 			setOnMouseExited((event) -> {
-				if(this.text.getText().isEmpty()){
+				if (this.text.getText().isEmpty()) {
 					border.setFill(null);
 					border.setStroke(Color.BLACK);
 				}
 			});
 			setOnMouseClicked(event -> {
-
+				
 				if (!playable) {
 					return;
 				}
-
+				
 				if (event.getButton() == MouseButton.PRIMARY) {
 					if (yourTurn && this.text.getText().isEmpty()) {
 						drawMove(playerSymbol);
@@ -944,23 +941,23 @@ public class Game extends Application {
 				}
 			});
 		}
-
+		
 		public double getCenterX() {
 			return getTranslateX() + 75;
 		}
-
+		
 		public double getCenterY() {
 			return getTranslateY() + 75;
 		}
-
+		
 		public String getValue() {
 			return text.getText();
 		}
-
+		
 		public void clear() {
 			text.setText("");
 		}
-
+		
 		private void drawMove(String turn) {
 			if (turn.equals("X")) {
 				text.setFill(playerColor);
@@ -971,7 +968,7 @@ public class Game extends Application {
 			}
 		}
 	}
-
+	
 	public Parent createShare() {
 		VBox container = new VBox();
 		Platform.runLater(() -> {
@@ -992,20 +989,20 @@ public class Game extends Application {
 					Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
 				}
 			});
-
+			
 		});
 		return container;
 	}
-
+	
 	public static void main(String[] args) {
 		launch(args);
-
+		
 	}
-
+	
 	public void stop() throws Exception {
-
+		
 		sMan.stop();
-
+		
 		super.stop(); //To change body of generated methods, choose Tools | Templates.
 	}
 }
