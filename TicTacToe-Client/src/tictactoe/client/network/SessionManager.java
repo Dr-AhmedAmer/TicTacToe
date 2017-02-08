@@ -24,7 +24,7 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
     
     public interface AuthListener{
         void onSuccess(Player p);
-        void onFailure();
+        void onFailure(AuthResultMessage msg);
     } 
     
     public interface GameMessageListener{
@@ -203,10 +203,10 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
         
     }
     
-    private void onAuthFailure(){
+    private void onAuthFailure(AuthResultMessage msg){
         
         if(authListner != null){
-            authListner.onFailure();
+            authListner.onFailure(msg);
         }
         
     }
@@ -283,7 +283,7 @@ public class SessionManager implements NetworkManager.ConnectionListener, Networ
     public void onAuthResultMessage(AuthResultMessage msg) {
         
         if(msg.getErrors().size() > 0){
-            onAuthFailure();
+            onAuthFailure(msg);
         }else{
             
             Player p = msg.getPlayer();

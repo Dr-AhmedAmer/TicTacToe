@@ -67,6 +67,7 @@ import tictactoe.basic.BasicUtils;
 import tictactoe.client.game.GameManager;
 import tictactoe.client.network.SessionManager;
 import tictactoe.models.Player;
+import tictactoe.network.messages.AuthResultMessage;
 
 public class Game extends Application {
 	JFXTextArea notification =new JFXTextArea(); 
@@ -275,9 +276,13 @@ public class Game extends Application {
 		}
 
 		@Override
-		public void onFailure() {
+		public void onFailure(AuthResultMessage msg) {
 			Platform.runLater(() -> {
-				lblMessage.setText("this user is not in database");
+                                if(msg.getErrors().size() >0){
+                                    for (tictactoe.helpers.Error err : msg.getErrors()){
+                                        lblMessage.setText(err.getDescription());
+                                    }
+                                }
 			});
 
 		}

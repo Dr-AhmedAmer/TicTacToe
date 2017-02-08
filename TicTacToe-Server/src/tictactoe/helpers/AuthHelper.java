@@ -102,12 +102,16 @@ public class AuthHelper {
         query.setParameter("QueryPassword",msg.getPassword());
         List list = query.list();
         
-        Player player = (Player)list.get(0);
-        
-        if(player.getStatus().equals("onlin")){
-            result.addError(new Error ("Already logged in"));
-            return  result;
+        if(list.size()>0){
+            Player player = (Player)list.get(0);
+            
+            if(! player.getStatus().equals("offln") && player != null){
+                result.addError(new Error ("Already logged in"));
+                return  result;
+            }
         }
+        
+        
    
         if(list.size() > 0){
             
