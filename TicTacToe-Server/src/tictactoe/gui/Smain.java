@@ -83,7 +83,7 @@ public class Smain extends Application implements SessionManager.PlayerStatusLis
 		});
 		closebtn.setOnAction((event) -> {
 			Server.stop();
-			primaryStage.close();
+			System.exit(0);
 		});
 		primaryStage.setOnCloseRequest((WindowEvent event) -> {
 			event.consume();
@@ -191,15 +191,18 @@ public class Smain extends Application implements SessionManager.PlayerStatusLis
 	}
 
 	@Override
-	public void onPlayerStatusChange(List<Player> list) {
-		if (list != null) {
+	public void onPlayerStatusChange(final List<Player> list) {
+            Platform.runLater(() -> {
+                if (list != null) {
 			listView.getItems().clear();
 			this.genrateListView(list);
 		} else {
 			listView.getItems().clear();
-			list = PlayerHelper.getAllPlayers().getResults();
-			this.genrateListView(list);
+			List newlist = PlayerHelper.getAllPlayers().getResults();
+			this.genrateListView(newlist);
 		}
+            });
+		
 	}
 
 }
