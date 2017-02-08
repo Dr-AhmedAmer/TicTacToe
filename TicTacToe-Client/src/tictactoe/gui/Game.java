@@ -61,6 +61,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -77,6 +78,10 @@ public class Game extends Application {
 	JFXButton chatSend = new JFXButton();
 	JFXTextArea chatText = new JFXTextArea();
 	JFXListView chatList = new JFXListView();
+	Label winsc=new Label();
+	Label losesc=new Label();
+	int losenum=0;
+	int winnum=0;
 	private Player player;
 	private SessionManager sMan = SessionManager.getInstance();
 	private GameManager gMan = GameManager.getInstance();
@@ -294,6 +299,7 @@ public class Game extends Application {
 		public void onGameEnd(String winner) {
 			Platform.runLater(() -> {
 				responsetxt.setFont(Font.font(responsetxt.getFont().toString(), FontWeight.BOLD, 60));
+				playagain.getStyleClass().add("button-raised");
 				reqvb.setAlignment(Pos.CENTER);
 				playagain.setOnAction((event) -> {
 					if (opponentId == 0) {
@@ -304,13 +310,18 @@ public class Game extends Application {
 					resetGame();
 					rootstack.getChildren().remove(reqvb);
 				});
+				System.out.println(winner);
 				if (winner.equals("Winner")) {
 					responsetxt.setFill(Color.GREEN);
-				} else {
+					winsc.setText(String.valueOf(++winnum));
+				} else if (winner.equals("Looser")) {
 					responsetxt.setFill(Color.RED);
+					losesc.setText(String.valueOf(++losenum));
+				}else{
+					responsetxt.setFill(Color.BLACK);
 				}
 				responsetxt.setText(winner);
-				reqvb.getChildren().setAll(responsetxt, playagain, createShare());
+				reqvb.getChildren().setAll(responsetxt, playagain);
 				reqvb.setOnMouseClicked(null);
 				rootstack.getChildren().add(reqvb);
 				sender = false;
@@ -637,7 +648,23 @@ public class Game extends Application {
 		BorderPane root = new BorderPane();
 		boardPane.setPrefSize(450, 450);
 		root.setPrefSize(650, 650);
-
+		HBox countitle=new HBox();
+		HBox counters=new HBox();
+		counters.setSpacing(20);
+		losesc.setText(String.valueOf(losenum));
+		winsc.setText(String.valueOf(winnum));
+		Label wins=new Label("Wins");
+		Label loses=new Label("Loses");
+		wins.getStyleClass().add("labelc");
+		loses.getStyleClass().add("labelc");
+		winsc.getStyleClass().add("labelwin");
+		losesc.getStyleClass().add("labellose");
+		countitle.getChildren().addAll(wins,loses);
+		counters.getChildren().addAll(winsc,losesc);
+		counters.setAlignment(Pos.CENTER);
+		countitle.setAlignment(Pos.CENTER);
+		countitle.setPrefWidth(200);
+		counters.setPrefWidth(200);
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 3; j++) {
 				Tile tile = new Tile();
@@ -700,7 +727,7 @@ public class Game extends Application {
 		aiplay.getStyleClass().add("button-raised");
 //		chatSend.getStyleClass().add("button-raised");
 //		chatEmojBtn.getStyleClass().add("button-raised");
-		playersvb.getChildren().addAll(filter, listView, aiplay);
+		playersvb.getChildren().addAll(filter, listView, aiplay,countitle,counters);
 		rootstack.getChildren().add(boardPane);
 		rootstack.setAlignment(Pos.CENTER);
 		chatVbox.getChildren().addAll(rootstack, chatScroll, chatHbox);
@@ -873,9 +900,9 @@ public class Game extends Application {
 				if (event.getButton() == MouseButton.PRIMARY) {
 					if (yourTurn && this.text.getText().isEmpty()) {
 						drawMove(playerSymbol);
-						border.setFill(clr.brighter().brighter().brighter().brighter());
-						border.setStroke(clr.darker());
 						checkState();
+						border.setFill(null);
+						border.setStroke(Color.BLACK);
 						gMan.move(this.x, this.y);
 						yourTurn = false;
 					} else {
@@ -904,11 +931,9 @@ public class Game extends Application {
 		private void drawMove(String turn) {
 			if (turn.equals("X")) {
 				text.setFill(playerColor);
-				clr=playerColor;
 				text.setText("X");
 			} else {
 				text.setFill(opponentColor);
-				clr=opponentColor;
 				text.setText("O");
 			}
 		}
