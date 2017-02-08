@@ -4,9 +4,6 @@ import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXListView;
 import com.jfoenix.controls.JFXPasswordField;
-import com.jfoenix.controls.JFXPopup;
-import com.jfoenix.controls.JFXPopup.PopupHPosition;
-import com.jfoenix.controls.JFXPopup.PopupVPosition;
 import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.validation.RequiredFieldValidator;
@@ -72,7 +69,7 @@ import tictactoe.client.network.SessionManager;
 import tictactoe.models.Player;
 
 public class Game extends Application {
-
+	JFXTextArea notification =new JFXTextArea(); 
 	JFXListView<Player> listView = new JFXListView<>();
 	JFXButton chatEmojBtn = new JFXButton();
 	JFXButton chatSend = new JFXButton();
@@ -116,14 +113,12 @@ public class Game extends Application {
 		@Override
 		public void onGameRequest(int senderId) {
 			Platform.runLater(() -> {
-				opponentId = senderId;
 				Popup requestpop = new Popup();
 				yesNoPopup(requestpop, "Player sends you request\nWhat you gonna do?",
 						"Accept", "Reject",
 						(event) -> {
-							System.out.println(senderId);
+							opponentId = senderId;
 							sMan.sendResponse(senderId, 0);
-							System.out.println(".onGameRequest()");
 							resetGame();
 							requestpop.hide();
 						},
@@ -139,6 +134,7 @@ public class Game extends Application {
 		public void onGameResponse(int senderId, int response, String symbol) {
 
 			Platform.runLater(() -> {
+				rootstack.getChildren().remove(reqvb);
 				responsetxt.setFont(Font.font(responsetxt.getFont().toString(), FontWeight.BOLD, 24));
 				Popup notify = notifyPopup(responsetxt);
 					if (response == 0) {
@@ -310,7 +306,6 @@ public class Game extends Application {
 					resetGame();
 					rootstack.getChildren().remove(reqvb);
 				});
-				System.out.println(winner);
 				if (winner.equals("Winner")) {
 					responsetxt.setFill(Color.GREEN);
 					winsc.setText(String.valueOf(++winnum));
@@ -364,7 +359,7 @@ public class Game extends Application {
 			switch (filter.getSelectionModel().getSelectedItem().toString()) {
 				case "Online":
 					listView.getItems().clear();
-					playerslist.filtered((p) -> p.getStatus().equals("onlin") || p.getStatus().equals("idle")).forEach((p) -> {
+					playerslist.filtered((p) -> p.getStatus().equals("play") || p.getStatus().equals("idle")).forEach((p) -> {
 						listView.getItems().add(p);
 					});
 					break;
@@ -387,7 +382,7 @@ public class Game extends Application {
 		switch (filter.getSelectionModel().getSelectedItem().toString()) {
 			case "Online":
 				listView.getItems().clear();
-				playerslist.filtered((p) -> p.getStatus().equals("onlin") || p.getStatus().equals("idle")).forEach((p) -> {
+				playerslist.filtered((p) -> p.getStatus().equals("play") || p.getStatus().equals("idle")).forEach((p) -> {
 					listView.getItems().add(p);
 				});
 				break;
@@ -415,6 +410,7 @@ public class Game extends Application {
 					setText(null);
 					setGraphic(null);
 				} else {
+					
 					HBox hBox = new HBox();
 					hBox.setSpacing(3);
 					VBox ptvb = new VBox();
@@ -429,7 +425,10 @@ public class Game extends Application {
 					ImageView pictureImageView = new ImageView();
 					Image image = new Image(getClass().getClassLoader().getResource("images/avatars/" + player.getImage()).toString(), 50, 50, true, true);
 					pictureImageView.setImage(image);
-
+					if(player.getStatus().equals("idle")){
+						notification.clear();
+						notification.setText(notification.getText()+"\n   s"+player.getDisplayName()+" is online");
+					}
 					hBox.getChildren().addAll(pictureImageView, ptvb);
 					hBox.setAlignment(Pos.CENTER_LEFT);
 
@@ -672,6 +671,7 @@ public class Game extends Application {
 				tile.setTranslateY(i * 150);
 				tile.setX(j);
 				tile.setY(i);
+				tile.setDisable(true);
 
 				boardPane.getChildren().add(tile);
 				board[j][i] = tile;
@@ -725,9 +725,8 @@ public class Game extends Application {
 		playersvb.setPrefWidth(200);
 		aiplay.setPrefWidth(200);
 		aiplay.getStyleClass().add("button-raised");
-//		chatSend.getStyleClass().add("button-raised");
-//		chatEmojBtn.getStyleClass().add("button-raised");
-		playersvb.getChildren().addAll(filter, listView, aiplay,countitle,counters);
+		notification.getStyleClass().add("notification");
+		playersvb.getChildren().addAll(filter, listView, aiplay,countitle,counters,notification);
 		rootstack.getChildren().add(boardPane);
 		rootstack.setAlignment(Pos.CENTER);
 		chatVbox.getChildren().addAll(rootstack, chatScroll, chatHbox);
@@ -777,6 +776,7 @@ public class Game extends Application {
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 3; j++) {
 				board[j][i].clear();
+				board[j][i].setDisable(false);
 			}
 		}
 		boardPane.getChildren().remove(line);
