@@ -332,8 +332,9 @@ public class Game extends Application {
 
 		@Override
 		public void onGameChatTextMessage(Player sender, String content) {
-
-			HBox hBox = new HBox();
+                    
+                    Platform.runLater(() -> {
+                        HBox hBox = new HBox();
 			VBox vBox = new VBox();
 			hBox.setSpacing(3);
 			vBox.setSpacing(3);
@@ -349,6 +350,9 @@ public class Game extends Application {
 			vBox.setStyle("-fx-background-color:rgba(52, 152, 219,1.0);-fx-padding:5px;-fx-border-radius:10");
 			vBox.getChildren().addAll(hBox, messeget);
 			chatList.getItems().add(vBox);
+                    });
+
+			
 
 		}
 	};
