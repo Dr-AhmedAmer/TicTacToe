@@ -40,7 +40,6 @@ and open the template in the editor.
       -fx-text-fill: #2c3e50;
       -fx-padding: 0.3em 0.3em;
 }
-
 .text-field{
     -fx-padding: 0.5em 0.5em;
     -fx-font-size: 14px;
@@ -49,6 +48,26 @@ and open the template in the editor.
 
 .label{
     -fx-font-size: 10px;
+}
+.labelc{
+    -fx-font-size: 20px;
+    -fx-padding: 0.3em 0.3em;
+    -fx-width:100;
+    -fx-text-align: center;
+}
+.labellose{
+     -fx-font-size: 20px;
+    -fx-text-fill: #c0392b;
+    -fx-width:100;
+    -fx-text-align: center;
+     
+}
+.labelwin{
+     -fx-font-size: 20px;
+    -fx-text-fill: #27ae60;
+    -fx-width:100;
+    -fx-text-align: center;
+     
 }
 .lblMessage{
     -fx-text-fill: red;

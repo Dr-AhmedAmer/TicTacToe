@@ -4,9 +4,6 @@ import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXListView;
 import com.jfoenix.controls.JFXPasswordField;
-import com.jfoenix.controls.JFXPopup;
-import com.jfoenix.controls.JFXPopup.PopupHPosition;
-import com.jfoenix.controls.JFXPopup.PopupVPosition;
 import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.validation.RequiredFieldValidator;
@@ -61,6 +58,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -71,12 +69,16 @@ import tictactoe.client.network.SessionManager;
 import tictactoe.models.Player;
 
 public class Game extends Application {
-
+	JFXTextArea notification =new JFXTextArea(); 
 	JFXListView<Player> listView = new JFXListView<>();
 	JFXButton chatEmojBtn = new JFXButton();
 	JFXButton chatSend = new JFXButton();
 	JFXTextArea chatText = new JFXTextArea();
 	JFXListView chatList = new JFXListView();
+	Label winsc=new Label();
+	Label losesc=new Label();
+	int losenum=0;
+	int winnum=0;
 	private Player player;
 	private SessionManager sMan = SessionManager.getInstance();
 	private GameManager gMan = GameManager.getInstance();
@@ -111,11 +113,11 @@ public class Game extends Application {
 		@Override
 		public void onGameRequest(int senderId) {
 			Platform.runLater(() -> {
-				opponentId = senderId;
 				Popup requestpop = new Popup();
 				yesNoPopup(requestpop, "Player sends you request\nWhat you gonna do?",
 						"Accept", "Reject",
 						(event) -> {
+							opponentId = senderId;
 							sMan.sendResponse(senderId, 0);
 							resetGame();
 							requestpop.hide();
@@ -132,9 +134,9 @@ public class Game extends Application {
 		public void onGameResponse(int senderId, int response, String symbol) {
 
 			Platform.runLater(() -> {
+				rootstack.getChildren().remove(reqvb);
 				responsetxt.setFont(Font.font(responsetxt.getFont().toString(), FontWeight.BOLD, 24));
 				Popup notify = notifyPopup(responsetxt);
-				if (sender) {
 					if (response == 0) {
 						rootstack.getChildren().remove(wait);
 						responsetxt.setText("Player Accepted");
@@ -154,6 +156,7 @@ public class Game extends Application {
 						responsetxt.setText("Player Rejected");
 
 					}
+				if (sender) {
 					notify.show(thestage, thestage.getX() + 100, thestage.getY() + 200);
 				}
 			});
@@ -188,23 +191,20 @@ public class Game extends Application {
 							});
 					listView.setOnMouseClicked((MouseEvent event) -> {
 						if (event.getButton().equals(MouseButton.PRIMARY)) {
-
 							if (event.getClickCount() == 2) {
 								if (listView.getSelectionModel().getSelectedItem().getStatus().equals("idle")) {
-
-									sMan.sendInvite(listView.getSelectionModel().getSelectedItem().getId());
 									rootstack.getChildren().add(wait);
-								} else if (listView.getSelectionModel().getSelectedItem().getStatus().equals("play")) {
+									sMan.sendInvite(listView.getSelectionModel().getSelectedItem().getId());
+									sender = true;
+									resetGame();
+
+								}else if (listView.getSelectionModel().getSelectedItem().getStatus().equals("play")) {
 									playPop.show(thestage, thestage.getX() + 100, thestage.getY() + 200);
-								} else if (listView.getSelectionModel().getSelectedItem().getStatus().equals("offln")) {
+								}else if (listView.getSelectionModel().getSelectedItem().getStatus().equals("offln")) {
 									oflinPop.show(thestage, thestage.getX() + 100, thestage.getY() + 200);
 								}
 
-								sender = true;
-								resetGame();
 							}
-                                                    
-							
 						}
 					});
 				}
@@ -295,6 +295,7 @@ public class Game extends Application {
 		public void onGameEnd(String winner) {
 			Platform.runLater(() -> {
 				responsetxt.setFont(Font.font(responsetxt.getFont().toString(), FontWeight.BOLD, 60));
+				playagain.getStyleClass().add("button-raised");
 				reqvb.setAlignment(Pos.CENTER);
 				playagain.setOnAction((event) -> {
 					if (opponentId == 0) {
@@ -307,11 +308,15 @@ public class Game extends Application {
 				});
 				if (winner.equals("Winner")) {
 					responsetxt.setFill(Color.GREEN);
-				} else {
+					winsc.setText(String.valueOf(++winnum));
+				} else if (winner.equals("Looser")) {
 					responsetxt.setFill(Color.RED);
+					losesc.setText(String.valueOf(++losenum));
+				}else{
+					responsetxt.setFill(Color.BLACK);
 				}
 				responsetxt.setText(winner);
-				reqvb.getChildren().setAll(responsetxt, playagain, createShare());
+				reqvb.getChildren().setAll(responsetxt, playagain);
 				reqvb.setOnMouseClicked(null);
 				rootstack.getChildren().add(reqvb);
 				sender = false;
@@ -354,7 +359,7 @@ public class Game extends Application {
 			switch (filter.getSelectionModel().getSelectedItem().toString()) {
 				case "Online":
 					listView.getItems().clear();
-					playerslist.filtered((p) -> p.getStatus().equals("onlin") || p.getStatus().equals("idle")).forEach((p) -> {
+					playerslist.filtered((p) -> p.getStatus().equals("play") || p.getStatus().equals("idle")).forEach((p) -> {
 						listView.getItems().add(p);
 					});
 					break;
@@ -377,7 +382,7 @@ public class Game extends Application {
 		switch (filter.getSelectionModel().getSelectedItem().toString()) {
 			case "Online":
 				listView.getItems().clear();
-				playerslist.filtered((p) -> p.getStatus().equals("onlin") || p.getStatus().equals("idle")).forEach((p) -> {
+				playerslist.filtered((p) -> p.getStatus().equals("play") || p.getStatus().equals("idle")).forEach((p) -> {
 					listView.getItems().add(p);
 				});
 				break;
@@ -405,6 +410,7 @@ public class Game extends Application {
 					setText(null);
 					setGraphic(null);
 				} else {
+					
 					HBox hBox = new HBox();
 					hBox.setSpacing(3);
 					VBox ptvb = new VBox();
@@ -419,7 +425,10 @@ public class Game extends Application {
 					ImageView pictureImageView = new ImageView();
 					Image image = new Image(getClass().getClassLoader().getResource("images/avatars/" + player.getImage()).toString(), 50, 50, true, true);
 					pictureImageView.setImage(image);
-
+					if(player.getStatus().equals("idle")){
+						notification.clear();
+						notification.setText(notification.getText()+"\n   s"+player.getDisplayName()+" is online");
+					}
 					hBox.getChildren().addAll(pictureImageView, ptvb);
 					hBox.setAlignment(Pos.CENTER_LEFT);
 
@@ -569,7 +578,9 @@ public class Game extends Application {
 		gridPane.add(btnReg, 0, 14, 2, 2);
 		gridPane.add(btnback, 0, 16, 2, 2);
 		gridPane.add(lblMessage, 0, 18, 2, 2);
-
+		btnback.setOnAction((event) -> {
+			thestage.setScene(login);
+		});
 		RequiredFieldValidator pfvalidator = new RequiredFieldValidator();
 		pfvalidator.setMessage("Input Required");
 		pfvalidator.setIcon(new FontAwesomeIconView(FontAwesomeIcon.WARNING));
@@ -636,7 +647,23 @@ public class Game extends Application {
 		BorderPane root = new BorderPane();
 		boardPane.setPrefSize(450, 450);
 		root.setPrefSize(650, 650);
-
+		HBox countitle=new HBox();
+		HBox counters=new HBox();
+		counters.setSpacing(20);
+		losesc.setText(String.valueOf(losenum));
+		winsc.setText(String.valueOf(winnum));
+		Label wins=new Label("Wins");
+		Label loses=new Label("Loses");
+		wins.getStyleClass().add("labelc");
+		loses.getStyleClass().add("labelc");
+		winsc.getStyleClass().add("labelwin");
+		losesc.getStyleClass().add("labellose");
+		countitle.getChildren().addAll(wins,loses);
+		counters.getChildren().addAll(winsc,losesc);
+		counters.setAlignment(Pos.CENTER);
+		countitle.setAlignment(Pos.CENTER);
+		countitle.setPrefWidth(200);
+		counters.setPrefWidth(200);
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 3; j++) {
 				Tile tile = new Tile();
@@ -644,6 +671,7 @@ public class Game extends Application {
 				tile.setTranslateY(i * 150);
 				tile.setX(j);
 				tile.setY(i);
+				tile.setDisable(true);
 
 				boardPane.getChildren().add(tile);
 				board[j][i] = tile;
@@ -697,9 +725,8 @@ public class Game extends Application {
 		playersvb.setPrefWidth(200);
 		aiplay.setPrefWidth(200);
 		aiplay.getStyleClass().add("button-raised");
-//		chatSend.getStyleClass().add("button-raised");
-//		chatEmojBtn.getStyleClass().add("button-raised");
-		playersvb.getChildren().addAll(filter, listView, aiplay);
+		notification.getStyleClass().add("notification");
+		playersvb.getChildren().addAll(filter, listView, aiplay,countitle,counters,notification);
 		rootstack.getChildren().add(boardPane);
 		rootstack.setAlignment(Pos.CENTER);
 		chatVbox.getChildren().addAll(rootstack, chatScroll, chatHbox);
@@ -749,6 +776,7 @@ public class Game extends Application {
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 3; j++) {
 				board[j][i].clear();
+				board[j][i].setDisable(false);
 			}
 		}
 		boardPane.getChildren().remove(line);
@@ -822,6 +850,7 @@ public class Game extends Application {
 	private class Tile extends StackPane {
 
 		private Text text = new Text();
+		Color clr;
 		private int x;
 		private int y;
 
@@ -845,12 +874,23 @@ public class Game extends Application {
 			Rectangle border = new Rectangle(150, 150);
 			border.setFill(null);
 			border.setStroke(Color.BLACK);
-
+			
 			text.setFont(Font.font(72));
 
 			setAlignment(Pos.CENTER);
 			getChildren().addAll(border, text);
-
+			setOnMouseEntered((event) -> {
+				if(this.text.getText().isEmpty()){
+					border.setFill(Color.LIGHTGRAY);
+					border.setStroke(Color.DARKGRAY);
+				}
+			});
+			setOnMouseExited((event) -> {
+				if(this.text.getText().isEmpty()){
+					border.setFill(null);
+					border.setStroke(Color.BLACK);
+				}
+			});
 			setOnMouseClicked(event -> {
 
 				if (!playable) {
@@ -859,9 +899,10 @@ public class Game extends Application {
 
 				if (event.getButton() == MouseButton.PRIMARY) {
 					if (yourTurn && this.text.getText().isEmpty()) {
-                                                System.out.println("tictactoe.gui.Game.Tile.<init>()");
 						drawMove(playerSymbol);
 						checkState();
+						border.setFill(null);
+						border.setStroke(Color.BLACK);
 						gMan.move(this.x, this.y);
 						yourTurn = false;
 					} else {
