@@ -36,7 +36,6 @@ import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
-import javafx.scene.control.PasswordField;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
@@ -44,13 +43,19 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
@@ -58,7 +63,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -70,6 +74,8 @@ import tictactoe.models.Player;
 import tictactoe.network.messages.AuthResultMessage;
 
 public class Game extends Application {
+	
+
 	JFXTextArea notification =new JFXTextArea(); 
 	JFXListView<Player> listView = new JFXListView<>();
 	JFXButton chatEmojBtn = new JFXButton();
@@ -448,13 +454,14 @@ public class Game extends Application {
 	private Scene createLoginRoot() {
 
 		BorderPane bp = new BorderPane();
-		bp.setPadding(new Insets(10, 50, 50, 50));
+		bp.setPadding(new Insets(30));
+		bp.setBackground(new Background(new BackgroundImage(new Image(BasicUtils.getResourceUrl(Game.class, "images.jpg")), BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT)));
 
 		//Adding GridPane
 		GridPane gridPane = new GridPane();
 		gridPane.setPadding(new Insets(20, 20, 20, 20));
 		gridPane.setHgap(5);
-		gridPane.setVgap(5);
+		gridPane.setVgap(10);
 
 		//Implementing Nodes for GridPane
 		JFXTextField txtEmail = new JFXTextField();
@@ -482,6 +489,8 @@ public class Game extends Application {
 		txtEmail.focusedProperty().addListener((o, oldVal, newVal) -> {
 			if (!newVal) {
 				txtEmail.validate();
+				pf.resetValidation();
+				
 			}
 		});
 		RequiredFieldValidator pfvalidator = new RequiredFieldValidator();
@@ -491,6 +500,8 @@ public class Game extends Application {
 		pf.focusedProperty().addListener((o, oldVal, newVal) -> {
 			if (!newVal) {
 				pf.validate();
+				txtEmail.resetValidation();
+				lblMessage.setText("");
 			}
 		});
 		txtEmail.focusedProperty().addListener((arg0, oldValue, newValue) -> {
@@ -521,12 +532,13 @@ public class Game extends Application {
 		String avatars[] = {"man1.png", "man2.png", "man3.png", "man4.png", "girl1.png", "girl2.png", "girl3.png", "girl4.png"};
 		BorderPane bp = new BorderPane();
 		bp.setPadding(new Insets(10, 50, 50, 50));
-
+		bp.setBackground(new Background(new BackgroundImage(new Image(BasicUtils.getResourceUrl(Game.class, "images.jpg")), BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT)));
+		
 		//Adding GridPane
 		GridPane gridPane = new GridPane();
 		gridPane.setPadding(new Insets(20, 20, 20, 20));
 		gridPane.setHgap(5);
-		gridPane.setVgap(5);
+		gridPane.setVgap(10);
 
 		//Implementing Nodes for GridPane
 		JFXTextField txtUserName = new JFXTextField();
@@ -595,6 +607,7 @@ public class Game extends Application {
 				txtUserName.resetValidation();
 				txtEmail.resetValidation();
 				pf.validate();
+				lblMessage.setText("");
 			}
 		});
 		RequiredFieldValidator usrvalidator = new RequiredFieldValidator();
@@ -607,6 +620,7 @@ public class Game extends Application {
 				txtUserName.validate();
 				txtEmail.resetValidation();
 				pf.resetValidation();
+				lblMessage.setText("");
 			}
 
 		});
@@ -636,8 +650,14 @@ public class Game extends Application {
 			String name = txtUserName.getText();
 			String email = txtEmail.getText();
 			String pass = pf.getText();
-			sMan.register(email, pass, name, avatar);
-			System.out.println("reg btn");
+			if(avatar==null){
+				lblMessage.setText("Choose an avatar first");
+			}else{
+				lblMessage.setText("");
+				sMan.register(email, pass, name, avatar);
+				
+			}
+			
 		});
 		gridPane.setAlignment(Pos.CENTER);
 		bp.setCenter(gridPane);
@@ -798,7 +818,6 @@ public class Game extends Application {
 
 		login = createLoginRoot();
 		login.getStylesheets().add(BasicUtils.getResourceUrl(Game.class, "style.css"));
-
 		primaryStage.setResizable(false);
 		primaryStage.setScene(login);
 		primaryStage.show();

@@ -83,7 +83,7 @@ public class Smain extends Application implements SessionManager.PlayerStatusLis
 		});
 		closebtn.setOnAction((event) -> {
 			Server.stop();
-			primaryStage.close();
+			System.exit(0);
 		});
 		primaryStage.setOnCloseRequest((WindowEvent event) -> {
 			event.consume();
