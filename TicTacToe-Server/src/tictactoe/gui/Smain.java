@@ -149,6 +149,8 @@ public class Smain extends Application implements SessionManager.PlayerStatusLis
 		listView.setCellFactory(parm -> new ListCell<Player>() {
 			@Override
 			public void updateItem(Player player, boolean empty) {
+                            Platform.runLater(() -> {
+                                
 				super.updateItem(player, empty);
 				if (empty) {
 					setText(null);
@@ -175,6 +177,7 @@ public class Smain extends Application implements SessionManager.PlayerStatusLis
 					setGraphic(hBox);
 
 				}
+                            });
 
 			}
 		});
@@ -188,15 +191,18 @@ public class Smain extends Application implements SessionManager.PlayerStatusLis
 	}
 
 	@Override
-	public void onPlayerStatusChange(List<Player> list) {
-		if (list != null) {
+	public void onPlayerStatusChange(final List<Player> list) {
+            Platform.runLater(() -> {
+                if (list != null) {
 			listView.getItems().clear();
 			this.genrateListView(list);
 		} else {
 			listView.getItems().clear();
-			list = PlayerHelper.getAllPlayers().getResults();
-			this.genrateListView(list);
+			List newlist = PlayerHelper.getAllPlayers().getResults();
+			this.genrateListView(newlist);
 		}
+            });
+		
 	}
 
 }
