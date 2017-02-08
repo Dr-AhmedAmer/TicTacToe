@@ -149,6 +149,8 @@ public class Smain extends Application implements SessionManager.PlayerStatusLis
 		listView.setCellFactory(parm -> new ListCell<Player>() {
 			@Override
 			public void updateItem(Player player, boolean empty) {
+                            Platform.runLater(() -> {
+                                
 				super.updateItem(player, empty);
 				if (empty) {
 					setText(null);
@@ -175,6 +177,7 @@ public class Smain extends Application implements SessionManager.PlayerStatusLis
 					setGraphic(hBox);
 
 				}
+                            });
 
 			}
 		});
