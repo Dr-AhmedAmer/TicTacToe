@@ -41,6 +41,7 @@ import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
@@ -456,7 +457,10 @@ public class Game extends Application {
 	}
 
 	private Scene createLoginRoot() {
-
+		Text welcome=new Text("Welcome to our TicTacToe Game");
+		welcome.setFont(Font.font(responsetxt.getFont().toString(), FontWeight.BOLD, 18));
+		welcome.setFill(Color.WHITESMOKE);
+		welcome.setEffect(new DropShadow(5,Color.BLACK));
 		BorderPane bp = new BorderPane();
 		bp.setPadding(new Insets(30));
 		bp.setBackground(new Background(new BackgroundImage(new Image(BasicUtils.getResourceUrl(Game.class, "images.jpg")), BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT)));
@@ -480,11 +484,12 @@ public class Game extends Application {
 		btnSignUp.getStyleClass().add("button-raised");
 		lblMessage.getStyleClass().add("lblMessage");
 		//Adding Nodes to GridPane layout
-		gridPane.add(txtEmail, 0, 0, 2, 2);
-		gridPane.add(pf, 0, 4, 2, 2);
-		gridPane.add(btnLogin, 0, 8, 2, 2);
-		gridPane.add(btnSignUp, 0, 10, 2, 2);
-		gridPane.add(lblMessage, 0, 12, 2, 2);
+		gridPane.add(welcome, 0, 0,2,2);
+		gridPane.add(txtEmail, 0, 4, 2, 2);
+		gridPane.add(pf, 0, 8, 2, 2);
+		gridPane.add(btnLogin, 0, 12, 2, 2);
+		gridPane.add(btnSignUp, 0, 14, 2, 2);
+		gridPane.add(lblMessage, 0, 16, 2, 2);
 
 		RequiredFieldValidator validator = new RequiredFieldValidator();
 		validator.setMessage("Input Required");
